@@ -1,0 +1,333 @@
+/* Reset dan Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #4b6cb7 0%, #182848 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    line-height: 1.6;
+    font-size: 18px;
+}
+
+.container {
+    width: 100%;
+    max-width: 600px;
+}
+
+.form-wrapper {
+    background: white;
+    padding: 40px 35px;
+    border-radius: 15px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+}
+
+/* Header Section */
+.header-section {
+    text-align: center;
+    margin-bottom: 35px;
+    border-bottom: 3px solid #4b6cb7;
+    padding-bottom: 20px;
+}
+
+.header-section h1 {
+    color: #2c3e50;
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.header-section h2 {
+    color: #4b6cb7;
+    font-size: 26px;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.subtitle {
+    color: #666;
+    font-size: 18px;
+    margin-bottom: 0;
+}
+
+/* Form Styles */
+.form-group {
+    margin-bottom: 30px;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 12px;
+    color: #2c3e50;
+    font-weight: 600;
+    font-size: 20px;
+}
+
+.label-text {
+    display: inline-block;
+    margin-right: 5px;
+}
+
+.required {
+    color: #e74c3c;
+    font-weight: bold;
+}
+
+.large-input,
+.large-select {
+    width: 100%;
+    padding: 18px 20px;
+    border: 3px solid #bdc3c7;
+    border-radius: 10px;
+    font-size: 20px;
+    transition: all 0.3s ease;
+    background-color: #f8f9fa;
+    color: #2c3e50;
+}
+
+.large-input:focus,
+.large-select:focus {
+    outline: none;
+    border-color: #4b6cb7;
+    background-color: white;
+    box-shadow: 0 0 0 4px rgba(75, 108, 183, 0.1);
+}
+
+.large-input::placeholder {
+    color: #95a5a6;
+    font-size: 18px;
+}
+
+.large-select {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%232c3e50' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 20px center;
+    background-size: 20px;
+}
+
+.help-text {
+    color: #7f8c8d;
+    font-size: 16px;
+    margin-top: 8px;
+    font-style: italic;
+}
+
+/* Button Styles */
+.form-actions {
+    margin-top: 40px;
+}
+
+.submit-btn {
+    width: 100%;
+    background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+    color: white;
+    border: none;
+    padding: 25px 30px;
+    border-radius: 12px;
+    font-size: 22px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 6px 20px rgba(39, 174, 96, 0.3);
+    display: block;
+    text-align: center;
+}
+
+.submit-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(39, 174, 96, 0.4);
+    background: linear-gradient(135deg, #219653 0%, #27ae60 100%);
+}
+
+.submit-btn:active {
+    transform: translateY(-1px);
+}
+
+.btn-text {
+    display: block;
+    font-size: 24px;
+    margin-bottom: 5px;
+}
+
+.btn-subtext {
+    display: block;
+    font-size: 16px;
+    font-weight: 400;
+    opacity: 0.9;
+}
+
+/* Support Info */
+.support-info {
+    margin-top: 40px;
+    padding: 25px;
+    background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+    border-radius: 12px;
+    border-left: 6px solid #4b6cb7;
+    text-align: center;
+}
+
+.support-info h4 {
+    color: #2c3e50;
+    font-size: 22px;
+    margin-bottom: 15px;
+    font-weight: 600;
+}
+
+.support-info p {
+    color: #2c3e50;
+    font-size: 18px;
+    margin-bottom: 8px;
+}
+
+.support-info strong {
+    color: #e74c3c;
+    font-size: 20px;
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+    .large-input,
+    .large-select {
+        border-width: 4px;
+        border-color: #000;
+    }
+    
+    .submit-btn {
+        border: 3px solid #000;
+    }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* Responsive Design untuk Orang Tua */
+@media (max-width: 768px) {
+    body {
+        font-size: 20px;
+        padding: 15px;
+    }
+    
+    .form-wrapper {
+        padding: 35px 25px;
+    }
+    
+    .header-section h1 {
+        font-size: 28px;
+    }
+    
+    .header-section h2 {
+        font-size: 24px;
+    }
+    
+    .large-input,
+    .large-select {
+        padding: 20px;
+        font-size: 22px;
+    }
+    
+    .submit-btn {
+        padding: 22px 25px;
+        font-size: 24px;
+    }
+    
+    .btn-text {
+        font-size: 26px;
+    }
+}
+
+@media (max-width: 480px) {
+    body {
+        font-size: 22px;
+        padding: 10px;
+    }
+    
+    .form-wrapper {
+        padding: 30px 20px;
+    }
+    
+    .header-section h1 {
+        font-size: 26px;
+    }
+    
+    .header-section h2 {
+        font-size: 22px;
+    }
+    
+    .form-label {
+        font-size: 22px;
+    }
+    
+    .large-input,
+    .large-select {
+        padding: 22px;
+        font-size: 24px;
+        border-width: 4px;
+    }
+    
+    .large-input::placeholder {
+        font-size: 20px;
+    }
+    
+    .help-text {
+        font-size: 18px;
+    }
+    
+    .submit-btn {
+        padding: 25px 20px;
+    }
+    
+    .btn-text {
+        font-size: 28px;
+    }
+    
+    .support-info {
+        padding: 20px;
+    }
+    
+    .support-info h4 {
+        font-size: 24px;
+    }
+    
+    .support-info p {
+        font-size: 20px;
+    }
+}
+
+/* Zoom Support */
+@media (max-width: 320px) {
+    .container {
+        min-width: 280px;
+    }
+}
+
+/* Print Styles */
+@media print {
+    body {
+        background: white !important;
+    }
+    
+    .form-wrapper {
+        box-shadow: none;
+        border: 2px solid #000;
+    }
+    
+    .submit-btn {
+        background: #ccc !important;
+        color: #000 !important;
+    }
+}

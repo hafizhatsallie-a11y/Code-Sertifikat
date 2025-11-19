@@ -1,0 +1,90 @@
+/* ===== STYLE PROGRAM KURSUS ===== */
+
+body {
+  background-image: url('foto/sudutmuseum.jpg'); /* ganti dengan nama file gambarmu */
+  background-size: cover;        /* gambar menutupi seluruh layar */
+  background-position: center;   /* posisi di tengah */
+  background-repeat: no-repeat;  /* agar tidak diulang */
+  background-attachment: fixed;  /* biar gambar tetap saat di-scroll */
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #333;
+  margin: 0;
+  padding: 0;
+}
+
+/* Judul utama */
+h2 {
+  font-weight: 700;
+  color: #0d6efd;
+  letter-spacing: 1px;
+}
+
+/* Card tampilan kursus */
+.card {
+  border: none;
+  border-radius: 12px;
+  background-color: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.12);
+}
+
+/* Gambar kursus */
+.card-img-top {
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+  height: 200px;
+  object-fit: cover;
+}
+
+/* Judul dan deskripsi di dalam card */
+.card-body h5 {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #0047FF;
+  margin-bottom: 10px;
+}
+
+.card-body p {
+  font-size: 0.95rem;
+  color: #555;
+  line-height: 1.5;
+  margin-bottom: 15px;
+}
+
+/* Tombol daftar */
+.btn-primary {
+  padding: 10px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  background-color: #0b5ed7;
+  transform: translateY(-2px);
+}
+
+/* Responsif untuk HP */
+@media (max-width: 768px) {
+  .card-body h5 {
+    font-size: 1rem;
+  }
+
+  .card-body p {
+    font-size: 0.9rem;
+  }
+
+  .btn-primary {
+    width: 100%;
+  }
+
+  .card-img-top {
+    height: 180px;
+  }
+}
