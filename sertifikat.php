@@ -44,8 +44,8 @@ $current_batch = mysqli_fetch_assoc($batch_result);
 
 // Jika tidak ada batch aktif, gunakan default
 if (!$current_batch) {
-    $nomor_batch = 3; // Default fallback
-    $tanggal_batch = '2025-09-27'; // Default fallback
+    $nomor_batch = 3;
+    $tanggal_batch = '2025-09-27';
 } else {
     $nomor_batch = $current_batch['nomor_batch'];
     $tanggal_batch = $current_batch['tanggal_mulai'];
@@ -65,17 +65,37 @@ if (!$current_template) {
     $belakang = "foto/" . $current_template['file_belakang'];
 }
 
-// cek template
-if (!file_exists($depan)) die("Template depan tidak ditemukan: " . $depan);
-if (!file_exists($belakang)) die("Template belakang tidak ditemukan: " . $belakang);
+// CEK TEMPLATE DEPAN (WAJIB)
+if (!file_exists($depan)) {
+    die("Template depan tidak ditemukan: " . $depan);
+}
+
+// CEK TEMPLATE BELAKANG OPSIONAL
+$belakang_ada = false;
+if (!empty($current_template['file_belakang'])) {
+    if (file_exists($belakang)) {
+        $belakang_ada = true;
+    }
+}
 
 // Fungsi untuk format tanggal Indonesia dengan hari
-function tanggal_indo($tanggal) {
+function tanggal_indo($tanggal)
+{
     $bulan = [
-        1 => 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+        1 => 'Januari',
+        'Februari',
+        'Maret',
+        'April',
+        'Mei',
+        'Juni',
+        'Juli',
+        'Agustus',
+        'September',
+        'Oktober',
+        'November',
+        'Desember'
     ];
-    
+
     $hari = [
         'Sunday' => 'Minggu',
         'Monday' => 'Senin',
@@ -85,18 +105,19 @@ function tanggal_indo($tanggal) {
         'Friday' => 'Jumat',
         'Saturday' => 'Sabtu'
     ];
-    
+
     $timestamp = strtotime($tanggal);
     $hari_inggris = date('l', $timestamp);
     $tanggal_num = date('j', $timestamp);
     $bulan_num = date('n', $timestamp);
     $tahun = date('Y', $timestamp);
-    
+
     return $hari[$hari_inggris] . ', ' . $tanggal_num . ' ' . $bulan[$bulan_num] . ' ' . $tahun;
 }
 
-// Fungsi untuk konversi angka ke Romawi
-function angkaKeRomawi($angka) {
+// Fungsi konversi angka ke Romawi
+function angkaKeRomawi($angka)
+{
     $romawi = '';
     $nilai_romawi = [
         'M' => 1000,
@@ -113,27 +134,25 @@ function angkaKeRomawi($angka) {
         'IV' => 4,
         'I' => 1
     ];
-    
+
     foreach ($nilai_romawi as $simbol => $nilai) {
         $jumlah = intval($angka / $nilai);
         $romawi .= str_repeat($simbol, $jumlah);
         $angka = $angka % $nilai;
     }
-    
+
     return $romawi;
 }
 
-// Fungsi untuk generate nomor sertifikat berdasarkan no_hp dengan format 0980/SAE/X/2025
-function generate_nomor_sertifikat_by_hp($koneksi, $no_hp, $nomor_batch, $tahun) {
-    // Cek apakah user ini sudah punya nomor sertifikat
+// Fungsi untuk generate nomor sertifikat
+function generate_nomor_sertifikat_by_hp($koneksi, $no_hp, $nomor_batch, $tahun)
+{
     $check_existing = mysqli_query($koneksi, "SELECT nomor_sertifikat FROM daftar WHERE no_hp = '$no_hp' AND nomor_sertifikat IS NOT NULL");
-    
+
     if (mysqli_num_rows($check_existing) > 0) {
-        // Jika sudah ada, gunakan nomor yang sama
         $existing_data = mysqli_fetch_assoc($check_existing);
         return $existing_data['nomor_sertifikat'];
     } else {
-        // Jika belum ada, generate nomor baru berdasarkan urutan pendaftaran
         $get_urutan_query = mysqli_query($koneksi, "
             SELECT COUNT(*) as urutan 
             FROM daftar 
@@ -142,10 +161,10 @@ function generate_nomor_sertifikat_by_hp($koneksi, $no_hp, $nomor_batch, $tahun)
         ");
         $urutan_data = mysqli_fetch_assoc($get_urutan_query);
         $counter = $urutan_data['urutan'] + 1;
-        
+
         $nomor_urut = str_pad($counter, 4, "0", STR_PAD_LEFT);
         $romawi_batch = angkaKeRomawi($nomor_batch);
-        
+
         return $nomor_urut . "/SAE/" . $romawi_batch . "/" . $tahun;
     }
 }
@@ -153,41 +172,37 @@ function generate_nomor_sertifikat_by_hp($koneksi, $no_hp, $nomor_batch, $tahun)
 // Format tanggal untuk sertifikat
 $tanggal_sertifikat = tanggal_indo($tanggal_batch);
 
-// GENERATE NOMOR SERTIFIKAT BERDASARKAN no_hp DENGAN FORMAT 0980/SAE/X/2025
+// Generate nomor sertifikat
 $tahun_sertifikat = date('Y', strtotime($tanggal_batch));
 $nomor_sertifikat = generate_nomor_sertifikat_by_hp($koneksi, $no_hp, $nomor_batch, $tahun_sertifikat);
 
-// Simpan nomor sertifikat ke database jika belum ada
+// Simpan jika belum ada
 if (empty($nomor_sertifikat_existing)) {
     mysqli_query($koneksi, "UPDATE daftar SET nomor_sertifikat = '$nomor_sertifikat' WHERE no_hp = '$no_hp'");
 }
 
-// buat PDF - TANPA MENGUBAH UKURAN TEMPLATE
+// buat PDF
 $pdf = new FPDF('L', 'mm', [330, 210]);
 $pdf->SetMargins(0, 0, 0);
 $pdf->SetAutoPageBreak(false);
 
-// Daftarkan font Pacifico terlebih dahulu
-$pdf->AddFont('Pacifico','','Pacifico.php');
+// font
+$pdf->AddFont('Pacifico', '', 'Pacifico.php');
 
 // Halaman Depan
 $pdf->AddPage();
 $pdf->Image($depan, 0, 0, 330, 210);
 
-// NOMOR SERTIFIKAT - format: 0980/SAE/X/2025 - DENGAN LETTER SPACING TANPA MENGUBAH TEMPLATE
+// NOMOR SERTIFIKAT
 $pdf->SetFont('helvetica', '', 16);
 $pdf->SetTextColor(0, 0, 0);
 
-// Hitung lebar teks untuk posisi yang tepat
 $text_width = $pdf->GetStringWidth($nomor_sertifikat);
-$spacing = 1; // Jarak antar huruf dalam mm
+$spacing = 1;
 $total_width = $text_width + ($spacing * (strlen($nomor_sertifikat) - 1));
-
-// Hitung posisi X agar tetap di tengah area 170mm
 $start_x = 80 + (170 - $total_width) / 2;
 $current_x = $start_x;
 
-// Tulis setiap karakter dengan spacing
 for ($i = 0; $i < strlen($nomor_sertifikat); $i++) {
     $char = substr($nomor_sertifikat, $i, 1);
     $pdf->SetXY($current_x, 45);
@@ -195,32 +210,54 @@ for ($i = 0; $i < strlen($nomor_sertifikat); $i++) {
     $current_x += $pdf->GetStringWidth($char) + $spacing;
 }
 
-// Nama Peserta - di tengah halaman TANPA strtoupper()
+// Nama Peserta
 $pdf->SetFont('Pacifico', '', 42);
 $pdf->SetTextColor(0, 0, 0);
 $pdf->SetXY(0, 85);
-$pdf->Cell(330, 10, $nama, 0, 1, 'C'); // HAPUS strtoupper() di sini
+$pdf->Cell(330, 10, $nama, 0, 1, 'C');
 
-// TANGGAL - DENGAN FONT MONOSPACE UNTUK POSISI TETAP
-$pdf->SetFont('helvetica', '', 17);
-$pdf->SetTextColor(0, 0, 0);
-$pdf->SetXY(104, 143);
-$pdf->Cell(100, 10, $tanggal_sertifikat, 0, 1, 'L');
+$pdf->SetFont('helvetica', '', 18);
 
-// ANGKKA BATCH DI HALAMAN DEPAN (tetap angka biasa)
+// Format tanggal pecah tahun
+$ts = strtotime($tanggal_batch);
+$tahun = date('Y', $ts);
+$tanggal_tanpa_tahun = str_replace(" " . $tahun, "", $tanggal_sertifikat);
+
+$base_x = 160;
+$base_y = 143;
+
+$pdf->SetXY($base_x, $base_y);
+$lebar_tahun = $pdf->GetStringWidth($tahun);
+
+$lebar_depan = $pdf->GetStringWidth($tanggal_tanpa_tahun);
+
+$x_depan = $base_x - $lebar_depan - 2;
+
+$pdf->SetXY($x_depan, $base_y);
+$pdf->Cell($lebar_depan, 10, $tanggal_tanpa_tahun, 0, 0, 'L');
+
+$pdf->SetXY($base_x, $base_y);
+$pdf->Cell($lebar_tahun, 10, $tahun, 0, 0, 'L');
+
+// ANGKA BATCH DEPAN
 $pdf->SetFont('helvetica', 'B', 19);
-// Halaman Belakang - hanya angka batch (tetap angka biasa)
-$pdf->AddPage();
-$pdf->Image($belakang, 0, 0, 330, 210);
-
-// ANGKKA BATCH DI HALAMAN BELAKANG (tetap angka biasa)
-$pdf->SetFont('helvetica', 'B', 20);
-$pdf->SetTextColor(0, 0, 0);
-$pdf->SetXY(68, 29);
+$pdf->SetTextColor(202, 96, 22);
+$pdf->SetXY(173, 135);
 $nomor_batch_padded = str_pad($nomor_batch, 2, " ", STR_PAD_LEFT);
-$pdf->Cell(330, 10, $nomor_batch_padded, 0, 1, 'C');
+$pdf->Cell(30, 10, $nomor_batch_padded, 0, 1, 'C');
 
-// tampilkan ke browser
+// Halaman Belakang HANYA JIKA ADA
+if ($belakang_ada) {
+
+    $pdf->AddPage();
+    $pdf->Image($belakang, 0, 0, 330, 210);
+
+    $pdf->SetFont('helvetica', 'B', 19);
+    $pdf->SetTextColor(0, 0, 0);
+    $pdf->SetXY(69, 29);
+    $pdf->Cell(330, 10, $nomor_batch_padded, 0, 1, 'C');
+}
+
+// output pdf
 $pdf->Output('I', "sertifikat_" . str_replace(' ', '_', $nama) . ".pdf");
 exit;
-?>

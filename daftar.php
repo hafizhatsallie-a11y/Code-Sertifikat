@@ -10,7 +10,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     // Cek apakah nomor HP sudah terdaftar
     $check_query = mysqli_query($koneksi, "SELECT * FROM daftar WHERE no_hp = '$no_hp'");
-    
+
     if (mysqli_num_rows($check_query) > 0) {
         // Jika sudah terdaftar, redirect ke halaman minta token
         header("Location: minta_token.php?hp=$no_hp&message=already_registered");
@@ -51,6 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -59,7 +60,61 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
     <link rel="stylesheet" href="css/daftar.css?v=<?php echo time(); ?>">
+    <style>
+        .sertifikat-section {
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #f8f9ff 0%, #e8f4ff 100%);
+            border-radius: 15px;
+            border: 2px dashed #007bff;
+        }
+        .sertifikat-btn {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+        }
+        .sertifikat-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+            color: white;
+        }
+        .sertifikat-info {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #6c757d;
+        }
+        .divider {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            margin: 25px 0;
+            color: #6c757d;
+        }
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .divider::before {
+            margin-right: 10px;
+        }
+        .divider::after {
+            margin-left: 10px;
+        }
+    </style>
 </head>
+
 <body>
     <div class="container">
         <div class="form-wrapper">
@@ -87,14 +142,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <input type="email" name="email" placeholder="nama@contoh.com" required class="large-input">
                     <div class="help-text">Kami akan mengirim konfirmasi ke email ini</div>
                 </div>
-<br>
+                <br>
                 <div class="form-group">
                     <label class="form-label">
                         <span class="label-text">Nomor Handphone</span>
                         <span class="required">*</span>
                     </label>
                     <input type="text" name="no_hp" placeholder="08123456789" required class="large-input">
-                    <div class="help-text">Nomor WhatsApp aktif untuk informasi penting</div>
+                    <div class="help-text">Nomor WhatsApp aktif untuk informasi penting dan jangan gunakan nomor palsu</div>
                 </div>
 
                 <div class="form-group">
@@ -119,7 +174,29 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 </div>
             </form>
 
+            <!-- Tambahkan bagian ini untuk tombol Lihat Sertifikat Saya -->
+            <div class="divider">
+                <span>ATAU</span>
+            </div>
+
+            <div class="sertifikat-section">
+                <h4>📄 Sudah Punya Sertifikat?</h4>
+                <p class="sertifikat-info">
+                    Jika Anda sudah terdaftar dan melalui verifikasi token, lihat sertifikat Anda di sini
+                </p>
+                <br>
+                <a href="lihat_sertifikat.php?no_hp=<?= urlencode($data_peserta['no_hp']) ?>" 
+   class="btn btn-success" target="_blank">
+   Lihat Sertifikat
+</a>
+
+                <div class="sertifikat-info">
+                    <small>Fitur untuk peserta yang sudah menyelesaikan pendaftaran dan verifikasi</small>
+                </div>
+            </div>
+
         </div>
     </div>
 </body>
+
 </html>

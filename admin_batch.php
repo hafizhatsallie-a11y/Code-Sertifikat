@@ -18,12 +18,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_batch'])) {
     $tanggal_mulai = mysqli_real_escape_string($koneksi, $_POST['tanggal_mulai']);
     $tanggal_selesai = mysqli_real_escape_string($koneksi, $_POST['tanggal_selesai']);
     
-    mysqli_query($koneksi, "UPDATE batch SET aktif = 0");
-    $query = "INSERT INTO batch (nomor_batch, tanggal_mulai, tanggal_selesai, aktif) VALUES ('$nomor_batch', '$tanggal_mulai', '$tanggal_selesai', 1)";
-    if (mysqli_query($koneksi, $query)) {
-        $success_message = "Batch berhasil ditambahkan!";
+    // Cek apakah nomor_batch sudah ada
+    $check = mysqli_query($koneksi, "SELECT id FROM batch WHERE nomor_batch = '$nomor_batch'");
+    if (mysqli_num_rows($check) > 0) {
+        $error_message = "Nomor batch '$nomor_batch' sudah digunakan! Silakan gunakan nomor lain.";
     } else {
-        $error_message = "Error: " . mysqli_error($koneksi);
+        // Nonaktifkan batch lama
+        mysqli_query($koneksi, "UPDATE batch SET aktif = 0");
+        
+        // Tambahkan batch baru
+        $query = "INSERT INTO batch (nomor_batch, tanggal_mulai, tanggal_selesai, aktif) 
+                  VALUES ('$nomor_batch', '$tanggal_mulai', '$tanggal_selesai', 1)";
+        
+        if (mysqli_query($koneksi, $query)) {
+            $success_message = "Batch berhasil ditambahkan!";
+        } else {
+            $error_message = "Error: " . mysqli_error($koneksi);
+        }
     }
 }
 
@@ -147,160 +158,192 @@ $admin_data = mysqli_fetch_assoc($admin_query);
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - SAE Digital Akademi</title>
-    <link rel="icon" type="image/x-icon" href="foto/logo sae.png">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
-    <link rel="stylesheet" href="css/admin_batch.css?v=<?php echo time(); ?>">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kelola Batch & Template</title>
+<link rel="icon" type="image/x-icon" href="foto/logo sae.png">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="css/admin_batch.css?<?php echo time(); ?>">
+<style>
+.status-active { color: green; font-weight: 600; }
+.batch-status, .template-status { color: #888; }
+.notification { padding: 10px; margin: 10px 0; border-radius: 6px; position: relative; }
+.notification.success { background: #d4edda; color: #155724; }
+.notification.error { background: #f8d7da; color: #721c24; }
+.btn-close { position: absolute; top: 5px; right: 5px; background: none; border: none; font-size: 16px; cursor: pointer; }
+</style>
 </head>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Toggle visibility password
+    document.querySelectorAll('.toggle-password').forEach(button => {
+        button.addEventListener('click', function() {
+            const inputId = this.getAttribute('data-target');
+            const input = document.getElementById(inputId);
+            const icon = this.querySelector('i');
+
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        });
+    });
+});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const notifs = document.querySelectorAll('.notification');
+    notifs.forEach(el => {
+        el.classList.add('show');
+        setTimeout(() => {
+            el.style.opacity = '0';
+            setTimeout(() => el.remove(), 300);
+        }, 5000); // 5 detik
+    });
+});
+</script>
 <body>
-    <div class="header">
-        <div class="header-content">
-            <h1>SAE Digital Akademi</h1>
-            <div class="admin-info">
-                <span>Halo, <?php echo $_SESSION['admin_username']; ?></span>
-                <a href="?logout=1" class="logout-btn">Logout</a>
-            </div>
-        </div>
-    </div>
 
+<!-- Navbar Atas -->
+<nav class="navbar navbar-expand-lg navbar-light" style="background-color: #fce4ec; box-shadow: 0 2px 10px rgba(233, 30, 99, 0.1);">
     <div class="container">
-        <?php if (!empty($success_message)): ?>
-            <div class="alert success"><?php echo $success_message; ?></div>
-        <?php endif; ?>
-        
-        <?php if (!empty($error_message)): ?>
-            <div class="alert error"><?php echo $error_message; ?></div>
-        <?php endif; ?>
+        <a class="navbar-brand d-flex align-items-center" href="admin_batch.php">
+            <img src="foto/logo sae.png" alt="Logo" width="36" height="36" class="me-2 rounded-circle">
+            <span class="fw-bold" style="color: #d81b60; font-size: 1.4rem;">Admin Batch</span>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+            <ul class="navbar-nav align-items-center">
+                <li class="nav-item me-3">
+                    <span class="d-none d-lg-inline" style="color: #888;">Halo,</span>
+                    <span class="fw-semibold" style="color: #f83080ff;">
+                        <i class="fas fa-user-circle me-1"></i>
+                        <?php echo htmlspecialchars($_SESSION['admin_username']); ?>
+                    </span>
+                </li>
+                <li class="nav-item">
+                    <a class="btn btn-sm logout-btn" href="logout.php">
+                        <i class="fas fa-sign-out-alt me-1"></i> Logout
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
 
-        <div class="dashboard-cards">
-            <div class="card">
-                <div class="card-icon">📅</div>
-                <h3>Batch Aktif</h3>
-                <p class="card-value"><?php echo $active_batch ? 'Batch ' . $active_batch['nomor_batch'] : '-'; ?></p>
-                <p class="card-desc"><?php echo $active_batch ? date('d M Y', strtotime($active_batch['tanggal_mulai'])) . ' - ' . date('d M Y', strtotime($active_batch['tanggal_selesai'])) : 'Tidak ada batch aktif'; ?></p>
-            </div>
-            
-            <div class="card">
-                <div class="card-icon">🎨</div>
-                <h3>Template Aktif</h3>
-                <p class="card-value"><?php echo $active_template ? $active_template['nama_template'] : '-'; ?></p>
-                <p class="card-desc">Template sertifikat saat ini</p>
+<!-- Notifikasi -->
+<?php if (!empty($success_message)): ?>
+    <div class="notification success"><?php echo htmlspecialchars($success_message); ?></div>
+<?php endif; ?>
+
+<?php if (!empty($error_message)): ?>
+    <div class="notification error"><?php echo htmlspecialchars($error_message); ?></div>
+<?php endif; ?>
+
+    <div class="row">
+        <!-- Card 1: Kelola Batch -->
+        <div class="col-md-6">
+            <div class="card p-3 mb-3">
+                <div class="card-header">Tambah Batch</div>
+                <form method="POST">
+                    <div class="form-group mb-2">
+                        <label>Nomor Batch</label>
+                        <input type="number" name="nomor_batch" class="form-control" min="1" required>
+                    </div>
+                    <div class="form-group mb-2">
+                        <label>Tanggal Mulai</label>
+                        <input type="date" name="tanggal_mulai" class="form-control" required>
+                    </div>
+                    <div class="form-group mb-2">
+                        <label>Tanggal Selesai</label>
+                        <input type="date" name="tanggal_selesai" class="form-control" required>
+                    </div>
+                    <button type="submit" name="add_batch" class="btn btn-primary w-100">Tambah Batch Aktif</button>
+                </form>
+                <ul class="batch-list mt-3">
+                    <?php mysqli_data_seek($batches_result, 0);
+                    while ($batch = mysqli_fetch_assoc($batches_result)): ?>
+                        <li class="batch-item <?php echo $batch['aktif'] ? 'active' : ''; ?>">
+                            <div>Batch <?php echo $batch['nomor_batch']; ?> (<?php echo date('d M Y', strtotime($batch['tanggal_mulai'])); ?> - <?php echo date('d M Y', strtotime($batch['tanggal_selesai'])); ?>)</div>
+                            <div class="<?php echo $batch['aktif'] ? 'status-active' : 'batch-status'; ?>"><?php echo $batch['aktif'] ? 'Aktif' : 'Nonaktif'; ?></div>
+                        </li>
+                    <?php endwhile; ?>
+                </ul>
             </div>
         </div>
 
-        <div class="content-grid">
-            <!-- Kelola Batch -->
-            <div class="content-card">
-                <h2>📦 Kelola Batch</h2>
-                <form method="POST" action="">
-                    <div class="form-group">
-                        <input type="number" name="nomor_batch" placeholder="Nomor Batch" min="1" required>
+        <!-- Card 2: Kelola Template -->
+        <div class="col-md-6">
+            <div class="card p-3 mb-3">
+                <div class="card-header">Kelola Template</div>
+                <form method="POST" enctype="multipart/form-data">
+                    <div class="form-group mb-2">
+                        <input type="text" name="nama_template" placeholder="Nama Template" class="form-control" required>
                     </div>
-                    <div class="form-group">
-                        <input type="date" name="tanggal_mulai" required>
-                    </div>
-                    <div class="form-group">
-                        <input type="date" name="tanggal_selesai" required>
-                    </div>
-                    <button type="submit" name="add_batch" class="btn primary">Set Batch Aktif</button>
-                </form>
-
-                <div class="table-section">
-                    <h3>Daftar Batch</h3>
-                    <div class="table">
-                        <?php while ($batch = mysqli_fetch_assoc($batches_result)): ?>
-                        <div class="table-row <?php echo $batch['aktif'] ? 'active' : ''; ?>">
-                            <div class="table-cell">Batch <?php echo $batch['nomor_batch']; ?></div>
-                            <div class="table-cell"><?php echo date('d M Y', strtotime($batch['tanggal_mulai'])); ?></div>
-                            <div class="table-cell"><?php echo date('d M Y', strtotime($batch['tanggal_selesai'])); ?></div>
-                            <div class="table-cell status"><?php echo $batch['aktif'] ? 'Aktif' : 'Nonaktif'; ?></div>
-                        </div>
-                        <?php endwhile; ?>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Kelola Template -->
-            <div class="content-card">
-                <h2>🎨 Kelola Template</h2>
-                <form method="POST" action="" enctype="multipart/form-data">
-                    <div class="form-group">
-                        <input type="text" name="nama_template" placeholder="Nama Template" required>
-                    </div>
-                    <div class="form-group">
+                    <div class="form-group mb-2">
                         <label>File Depan (JPG) *</label>
-                        <input type="file" name="file_depan" accept=".jpg,.jpeg" required>
+                        <input type="file" name="file_depan" class="form-control" accept=".jpg,.jpeg" required>
                     </div>
-                    <div class="form-group">
-                        <label>File Belakang (JPG) - Opsional</label>
-                        <input type="file" name="file_belakang" accept=".jpg,.jpeg">
+                    <div class="form-group mb-2">
+                        <label>File Belakang (Opsional)</label>
+                        <input type="file" name="file_belakang" class="form-control" accept=".jpg,.jpeg">
                     </div>
-                    <button type="submit" name="upload_template" class="btn primary">Set Template Aktif</button>
+                    <button type="submit" name="upload_template" class="btn btn-primary w-100">Set Template Aktif</button>
                 </form>
-
-                <div class="table-section">
-                    <h3>Daftar Template</h3>
-                    <div class="table">
-                        <?php 
-                        // Reset pointer result
-                        mysqli_data_seek($templates_result, 0);
-                        while ($template = mysqli_fetch_assoc($templates_result)): 
-                        ?>
-                        <div class="table-row <?php echo $template['aktif'] ? 'active' : ''; ?>">
-                            <div class="table-cell"><?php echo $template['nama_template']; ?></div>
-                            <div class="table-cell"><?php echo $template['file_depan']; ?></div>
-                            <div class="table-cell"><?php echo $template['file_belakang'] ?: '-'; ?></div>
-                            <div class="table-cell status"><?php echo $template['aktif'] ? 'Aktif' : 'Nonaktif'; ?></div>
-                        </div>
-                        <?php endwhile; ?>
-                    </div>
+                <ul class="template-list mt-3">
+                    <?php mysqli_data_seek($templates_result, 0);
+                    while ($template = mysqli_fetch_assoc($templates_result)): ?>
+                        <li class="template-item <?php echo $template['aktif'] ? 'active' : ''; ?>">
+                            <div><?php echo $template['nama_template']; ?> (<?php echo $template['file_depan']; ?><?php echo $template['file_belakang'] ? ' / ' . $template['file_belakang'] : ''; ?>)</div>
+                            <div class="<?php echo $template['aktif'] ? 'status-active' : 'template-status'; ?>"><?php echo $template['aktif'] ? 'Aktif' : 'Nonaktif'; ?></div>
+                        </li>
+                    <?php endwhile; ?>
+                </ul>
+            </div>
+        </div>
+<br>
+<br>
+        <!-- Card 3: Ubah Username & Password -->
+<div class="col-md-12">
+    <div class="card p-3 mb-3">
+        <div class="card-header">Ubah Username & Password</div>
+        <form method="POST">
+            <div class="form-group mb-2">
+                <label>Username Baru</label>
+                <input type="text" name="new_username" value="<?php echo htmlspecialchars($admin_data['username']); ?>" class="form-control" required>
+            </div>
+            <div class="form-group mb-2 position-relative">
+                <label>Password Baru</label>
+                <div class="input-with-icon">
+                    <input type="password" name="new_password" id="new_password" class="form-control pe-5" placeholder="Kosongkan jika tidak diubah">
+                    <button type="button" class="btn btn-sm toggle-password" data-target="new_password" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #6c757d;">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+                <small class="text-muted">Kosongkan jika tidak ingin mengubah password</small>
+            </div>
+            <div class="form-group mb-2 position-relative">
+                <label>Konfirmasi Password</label>
+                <div class="input-with-icon">
+                    <input type="password" name="confirm_password" id="confirm_password" class="form-control pe-5" placeholder="Ulangi password baru">
+                    <button type="button" class="btn btn-sm toggle-password" data-target="confirm_password" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #6c757d;">
+                        <i class="fas fa-eye"></i>
+                    </button>
                 </div>
             </div>
-
-            <!-- Ubah Username & Password -->
-        <div class="content-card">
-    <h2>🔐 Ubah Username & Password</h2>
-    
-    <!-- Tampilkan Data Saat Ini -->
-    <div class="current-data">
-        <h4>Data Saat Ini:</h4>
-        <div class="data-info">
-            <div class="data-item">
-                <strong>Username:</strong> 
-                <span><?php echo htmlspecialchars($admin_data['username']); ?></span>
-            </div>
-            <div class="data-item">
-                <strong>Status:</strong> 
-                <span class="status active">Aktif</span>
-            </div>
-            <div class="data-item">
-                <strong>Terakhir Login:</strong> 
-                <span><?php echo date('d M Y H:i:s'); ?></span>
-            </div>
-        </div>
+            <button type="submit" name="change_credentials" class="btn btn-success w-100">Perbarui Data</button>
+        </form>
     </div>
-
-    <form method="POST" action="">
-        <div class="form-group">
-            <label>Username Baru</label>
-            <input type="text" name="new_username" placeholder="Username Baru" value="<?php echo htmlspecialchars($admin_data['username']); ?>" required>
-        </div>
-        <div class="form-group">
-            <label>Password Baru</label>
-            <input type="password" name="new_password" placeholder="Password Baru (kosongkan jika tidak ingin mengubah)">
-            <small class="form-text">Biarkan kosong jika tidak ingin mengubah password</small>
-        </div>
-        <div class="form-group">
-            <label>Konfirmasi Password</label>
-            <input type="password" name="confirm_password" placeholder="Konfirmasi Password">
-        </div>
-        <button type="submit" name="change_credentials" class="btn primary">Ubah Data</button>
-    </form>
 </div>
-        </div>
-    </div>
+</div>
 </body>
 </html>
