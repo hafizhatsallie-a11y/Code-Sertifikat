@@ -72,6 +72,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 Lihat Sertifikat Saya
             </button>
         </form>
+ 
 
         <?php if (!empty($error)): ?>
             <div class="error-message">
@@ -84,9 +85,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <i class="fas fa-gift"></i>
             Sertifikat nya jangan lupa di download yaa 🎉
         </div>
-
+       <a href="daftar.php" class="btn btn-outline mt-3">
+    <i class="fas fa-home"></i> Kembali ke Beranda
+</a>
         <div class="footer">
-            <p>SAE Digital Akademi &copy; 2024</p>
+            <p>SAE Digital Akademi &copy; 2025</p>
         </div>
     </div>
 
