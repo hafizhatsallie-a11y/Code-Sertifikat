@@ -1,134 +1,180 @@
 <?php
-require 'fpdf186/fpdf.php';
+session_start();
 include 'koneksi.php';
 
-// Hapus output buffer supaya PDF tidak error
-while (ob_get_level()) {
-    ob_end_clean();
+// Cek login
+if (!isset($_SESSION['admin_logged_in'])) {
+    header('Location: admin_login.php');
+    exit;
 }
 
-if (empty($_GET['email'])) {
-    die("Email tidak diberikan.");
+$success_message = '';
+$error_message = '';
+
+// =========================
+// TAMBAH ATAU AKTIFKAN BATCH
+// =========================
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_batch'])) {
+
+    $nomor_batch = mysqli_real_escape_string($koneksi, $_POST['nomor_batch']);
+    $tanggal_mulai = mysqli_real_escape_string($koneksi, $_POST['tanggal_mulai']);
+    $tanggal_selesai = mysqli_real_escape_string($koneksi, $_POST['tanggal_selesai']);
+
+    // Nonaktifkan semua batch lama
+    mysqli_query($koneksi, "UPDATE batch SET aktif = 0");
+
+    // Cek apakah batch ini sudah ada sebelumnya
+    $cek = mysqli_query($koneksi, "SELECT id FROM batch WHERE nomor_batch = '$nomor_batch' LIMIT 1");
+
+    if (mysqli_num_rows($cek) > 0) {
+        // Jika batch sudah ada, aktifkan ulang dan update tanggalnya
+        mysqli_query($koneksi, "UPDATE batch 
+                                SET tanggal_mulai = '$tanggal_mulai',
+                                    tanggal_selesai = '$tanggal_selesai',
+                                    aktif = 1
+                                WHERE nomor_batch = '$nomor_batch'");
+        $success_message = "Batch $nomor_batch berhasil diaktifkan kembali.";
+    } else {
+        // Tambah batch baru
+        mysqli_query($koneksi, "INSERT INTO batch (nomor_batch, tanggal_mulai, tanggal_selesai, aktif)
+                                VALUES ('$nomor_batch', '$tanggal_mulai', '$tanggal_selesai', 1)");
+        $success_message = "Batch baru berhasil ditambahkan.";
+    }
 }
 
-$email = mysqli_real_escape_string($koneksi, $_GET['email']);
+// =========================
+// UBAH USERNAME & PASSWORD
+// =========================
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['change_credentials'])) {
+    $new_username = mysqli_real_escape_string($koneksi, $_POST['new_username']);
+    $new_password = mysqli_real_escape_string($koneksi, $_POST['new_password']);
+    $confirm_password = mysqli_real_escape_string($koneksi, $_POST['confirm_password']);
+    $admin_id = $_SESSION['admin_id'];
 
-// Ambil data peserta
-$q = mysqli_query($koneksi, "
-    SELECT nama_peserta, kursus, id, nomor_sertifikat, no_hp
-    FROM daftar 
-    WHERE email = '$email' 
-    LIMIT 1
-");
+    if (empty($new_username)) {
+        $error_message = "Username tidak boleh kosong.";
+    } else {
+        $check_username = mysqli_query($koneksi, "SELECT * FROM admin WHERE username = '$new_username' AND id != '$admin_id'");
+        if (mysqli_num_rows($check_username) > 0) {
+            $error_message = "Username sudah digunakan admin lain.";
+        } else {
+            mysqli_query($koneksi, "UPDATE admin SET username = '$new_username' WHERE id = '$admin_id'");
+            $_SESSION['admin_username'] = $new_username;
+            $success_message = "Username berhasil diperbarui.";
 
-if (mysqli_num_rows($q) == 0) {
-    die("Data peserta tidak ditemukan.");
+            if (!empty($new_password)) {
+                if ($new_password === $confirm_password) {
+                    $hashed = password_hash($new_password, PASSWORD_DEFAULT);
+                    mysqli_query($koneksi, "UPDATE admin SET password = '$hashed' WHERE id = '$admin_id'");
+                    $success_message .= " Password berhasil diperbarui.";
+                } else {
+                    $error_message = "Password tidak cocok.";
+                }
+            }
+        }
+    }
 }
 
-$d = mysqli_fetch_assoc($q);
+// =========================
+// UPLOAD TEMPLATE
+// =========================
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['upload_template'])) {
+    $nama_template = mysqli_real_escape_string($koneksi, $_POST['nama_template']);
 
-$nama = $d['nama_peserta'];
-$kursus = $d['kursus'];
-$nomor_sertifikat = $d['nomor_sertifikat'];
-$no_hp = $d['no_hp'];
+    if ($_FILES['file_depan']['error'] === 0) {
+        $file_depan = $_FILES['file_depan'];
+        $depan_filename = 'sertifikat_depan_' . time() . '.jpg';
+        move_uploaded_file($file_depan['tmp_name'], 'foto/' . $depan_filename);
 
-// Ambil batch aktif
-$batch = mysqli_query($koneksi, "SELECT * FROM batch WHERE aktif = 1 ORDER BY id DESC LIMIT 1");
-$batch_data = mysqli_fetch_assoc($batch);
+        $belakang_filename = null;
+        if ($_FILES['file_belakang']['error'] === 0) {
+            $file_belakang = $_FILES['file_belakang'];
+            $belakang_filename = 'sertifikat_belakang_' . time() . '.jpg';
+            move_uploaded_file($file_belakang['tmp_name'], 'foto/' . $belakang_filename);
+        }
 
-$nomor_batch = $batch_data ? $batch_data['nomor_batch'] : 3;
-$tanggal_batch = $batch_data ? $batch_data['tanggal_mulai'] : '2025-09-27';
+        mysqli_query($koneksi, "UPDATE template SET aktif = 0");
 
-// Ambil template aktif
-$temp = mysqli_query($koneksi, "SELECT * FROM template WHERE aktif = 1 ORDER BY id DESC LIMIT 1");
-$t = mysqli_fetch_assoc($temp);
+        if ($belakang_filename) {
+            mysqli_query($koneksi, "INSERT INTO template (nama_template, file_depan, file_belakang, aktif)
+                                    VALUES ('$nama_template', '$depan_filename', '$belakang_filename', 1)");
+        } else {
+            mysqli_query($koneksi, "INSERT INTO template (nama_template, file_depan, aktif)
+                                    VALUES ('$nama_template', '$depan_filename', 1)");
+        }
 
-$depan = $t ? "foto/" . $t['file_depan'] : "foto/sertifikat_kursus_shopee (depan).jpg";
-$belakang = $t ? "foto/" . $t['file_belakang'] : "foto/sertifikat_kursus_shopee (belakang).jpg";
-
-$belakang_ada = file_exists($belakang);
-
-// Fungsi tanggal Indo
-function tanggal_indo_lengkap($tgl) {
-    $bulan = [
-        1=>'Januari','Februari','Maret','April','Mei','Juni',
-        'Juli','Agustus','September','Oktober','November','Desember'
-    ];
-    $hari = [
-        'Sunday'=>'Minggu','Monday'=>'Senin','Tuesday'=>'Selasa',
-        'Wednesday'=>'Rabu','Thursday'=>'Kamis','Friday'=>'Jumat','Saturday'=>'Sabtu'
-    ];
-    $ts = strtotime($tgl);
-    return $hari[date('l',$ts)] . ", " . date('j',$ts) . " " . $bulan[date('n',$ts)] . " " . date('Y',$ts);
+        $success_message = "Template berhasil diupload.";
+    } else {
+        $error_message = "File depan wajib diupload.";
+    }
 }
 
-$tanggal_sertifikat = tanggal_indo_lengkap($tanggal_batch);
-
-// Buat PDF
-$pdf = new FPDF('L','mm',[330,210]);
-$pdf->SetMargins(0,0,0);
-$pdf->SetAutoPageBreak(false);
-
-$pdf->AddFont('Pacifico','','Pacifico.php');
-
-// Halaman Depan
-$pdf->AddPage();
-$pdf->Image($depan,0,0,330,210);
-
-// Nomor sertifikat
-$pdf->SetFont('helvetica','',16);
-$pdf->SetTextColor(0,0,0);
-
-$text_width = $pdf->GetStringWidth($nomor_sertifikat);
-$spacing = 1;
-$total_width = $text_width + ($spacing * (strlen($nomor_sertifikat)-1));
-$start_x = 80 + (170 - $total_width) / 2;
-$current_x = $start_x;
-
-for($i=0;$i<strlen($nomor_sertifikat);$i++){
-    $char = $nomor_sertifikat[$i];
-    $pdf->SetXY($current_x,45);
-    $pdf->Cell($pdf->GetStringWidth($char),10,$char,0,0,'L');
-    $current_x += $pdf->GetStringWidth($char) + $spacing;
+// =========================
+// LOGOUT
+// =========================
+if (isset($_GET['logout'])) {
+    session_destroy();
+    header('Location: login_admin_batch.php');
+    exit;
 }
 
-// Nama
-$pdf->SetFont('Pacifico','',42);
-$pdf->SetXY(0,85);
-$pdf->Cell(330,10,$nama,0,1,'C');
+// =========================
+// DATA UNTUK TAMPILAN
+// =========================
+$batches_result = mysqli_query($koneksi, "SELECT * FROM batch ORDER BY nomor_batch DESC");
+$templates_result = mysqli_query($koneksi, "SELECT * FROM template ORDER BY dibuat_pada DESC");
 
-// Tanggal
-$pdf->SetFont('helvetica','',18);
+$admin_id = $_SESSION['admin_id'];
+$admin_data = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT username FROM admin WHERE id = '$admin_id'"));
+?>
 
-$ts = strtotime($tanggal_batch);
-$tahun = date('Y',$ts);
-$tanggal_tanpa_tahun = str_replace(" ".$tahun,"",$tanggal_sertifikat);
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<title>Kelola Batch & Template</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="css/admin_batch.css?<?php echo time(); ?>">
+</head>
+<body>
 
-$base_x = 160;
-$base_y = 143;
+<!-- NOTIFIKASI -->
+<?php if ($success_message): ?>
+<div class="alert alert-success"><?php echo $success_message; ?></div>
+<?php endif; ?>
 
-$pdf->SetXY($base_x - $pdf->GetStringWidth($tanggal_tanpa_tahun) - 2, $base_y);
-$pdf->Cell(0,10,$tanggal_tanpa_tahun,0,0,'L');
+<?php if ($error_message): ?>
+<div class="alert alert-danger"><?php echo $error_message; ?></div>
+<?php endif; ?>
 
-$pdf->SetXY($base_x, $base_y);
-$pdf->Cell(0,10,$tahun,0,0,'L');
+<div class="container mt-4">
+    <h2>Kelola Batch</h2>
 
-// Batch
-$pdf->SetFont('helvetica','B',19);
-$pdf->SetTextColor(202,96,22);
-$pdf->SetXY(173,135);
-$pdf->Cell(30,10,str_pad($nomor_batch,2," ",STR_PAD_LEFT),0,1,'C');
+    <form method="POST">
+        <label>Nomor Batch</label>
+        <input type="number" name="nomor_batch" class="form-control" required>
 
-// Halaman Belakang jika ada
-if ($belakang_ada) {
-    $pdf->AddPage();
-    $pdf->Image($belakang,0,0,330,210);
+        <label class="mt-2">Tanggal Mulai</label>
+        <input type="date" name="tanggal_mulai" class="form-control" required>
 
-    $pdf->SetFont('helvetica','B',19);
-    $pdf->SetTextColor(0,0,0);
-    $pdf->SetXY(69,29);
-    $pdf->Cell(330,10,str_pad($nomor_batch,2," ",STR_PAD_LEFT),0,1,'C');
-}
+        <label class="mt-2">Tanggal Selesai</label>
+        <input type="date" name="tanggal_selesai" class="form-control" required>
 
-$pdf->Output('I', "sertifikat_".$nama.".pdf");
-exit;
+        <button class="btn btn-primary w-100 mt-3" name="add_batch">Simpan Batch</button>
+    </form>
+
+    <hr>
+
+    <h4>Daftar Batch</h4>
+    <ul class="list-group">
+        <?php while ($b = mysqli_fetch_assoc($batches_result)): ?>
+            <li class="list-group-item d-flex justify-content-between">
+                <span>Batch <?php echo $b['nomor_batch']; ?> (<?php echo $b['tanggal_mulai']; ?> s.d <?php echo $b['tanggal_selesai']; ?>)</span>
+                <span><?php echo $b['aktif'] ? 'Aktif' : 'Nonaktif'; ?></span>
+            </li>
+        <?php endwhile; ?>
+    </ul>
+
+</div>
+
+</body>
+</html>
