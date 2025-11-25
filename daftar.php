@@ -88,8 +88,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <select name="kursus" required class="large-select">
                         <option value="">-- Pilih Kursus --</option>
                         <option value="Shopee Affiliate">Shopee Affiliate</option>
-                        <option value="Canva Design">Canva Design</option>
-                        <option value="Digital Marketing">Digital Marketing</option>
                     </select>
                 </div>
 
