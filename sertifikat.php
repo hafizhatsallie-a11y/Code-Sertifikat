@@ -145,12 +145,14 @@ function generate_nomor_sertifikat_by_hp($koneksi, $no_hp, $bulan_romawi, $tahun
     }
 
     $hit = mysqli_query($koneksi, "
-        SELECT COUNT(*) AS jml FROM daftar
-        WHERE nomor_sertifikat IS NOT NULL
-    ");
-    $num = mysqli_fetch_assoc($hit)['jml'] + 1;
+    SELECT COUNT(*) AS jml FROM daftar
+    WHERE nomor_sertifikat IS NOT NULL
+");
 
-    $urut = str_pad($num, 4, "0", STR_PAD_LEFT);
+$base = 1;
+$num = mysqli_fetch_assoc($hit)['jml'];
+$urut = str_pad($base + $num, 4, "0", STR_PAD_LEFT);
+
 
     return $urut . "/SAE/" . $bulan_romawi . "/" . $tahun;
 }

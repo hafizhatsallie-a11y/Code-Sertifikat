@@ -69,12 +69,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <link rel="stylesheet" href="css/login_admin_sertifikat.css?v=<?php echo time(); ?>">
   
 </head>
+<br>
 <body>
     <div class="login-container">
         <h2>Login Admin</h2>
         
         <div class="default-info">
-            <strong>Default Login:</strong><br>
+            <strong>Default Login (wajib diganti ke default jika ada perpindahan tangan):</strong><br>
             Username: <strong>adminsae</strong><br>
             Password: <strong>123</strong>
         </div>
@@ -93,7 +94,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $admin_data = mysqli_fetch_assoc($check_admin);
             echo '<div class="debug-info">';
             echo 'Admin ditemukan di database.<br>';
-            echo 'Hash password: ' . substr($admin_data['password'], 0, 20) . '...';
             echo '</div>';
         } else {
             echo '<div class="debug-info">';
@@ -135,7 +135,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             
             if (passwordInput.type === 'password') {
                 passwordInput.type = 'text';
-                toggleButton.textContent = '🔒';
+                toggleButton.textContent = '🙈';
             } else {
                 passwordInput.type = 'password';
                 toggleButton.textContent = '👁️';

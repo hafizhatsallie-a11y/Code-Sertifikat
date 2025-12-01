@@ -1,7 +1,7 @@
 /* Token Sertifikat - Modern Design dengan tema ungu-biru */
 :root {
     --primary: #667eea; /* ungu biru */
-    --primary-light: #764ba2;
+    --primary-light: #c9ebcf;
     --secondary: #20c997; /* hijau */
     --success: #28a745;
     --danger: #dc3545;
@@ -11,7 +11,7 @@
     --dark: #2c3e50;
     --light: #f8f9fa;
     --border: #e9ecef;
-    --radius: 16px;
+    --radius: 16px; 
     --gradient: linear-gradient(135deg, #667eea, #764ba2);
 }
 
@@ -23,7 +23,7 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #003cff 0%, #1037e6 10%);
     min-height: 100vh;
     display: flex;
     align-items: center;

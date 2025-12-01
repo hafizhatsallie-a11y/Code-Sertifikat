@@ -58,28 +58,7 @@ if ($hari_ini < $tanggal_mulai) {
                         Program akan dimulai pada: <strong><?php echo date('d F Y', strtotime($tanggal_mulai)); ?></strong>
                     </div>
                 </div>
-                
-                <div class="countdown">
-                    <?php
-                    $selisih = strtotime($tanggal_mulai) - time();
-                    $hari = floor($selisih / (60 * 60 * 24));
-                    $jam = floor(($selisih % (60 * 60 * 24)) / (60 * 60));
-                    $menit = floor(($selisih % (60 * 60)) / 60);
-                    ?>
-                    <div class="countdown-item">
-                        <div class="countdown-number"><?php echo $hari; ?></div>
-                        <div class="countdown-label">Hari</div>
-                    </div>
-                    <div class="countdown-item">
-                        <div class="countdown-number"><?php echo $jam; ?></div>
-                        <div class="countdown-label">Jam</div>
-                    </div>
-                    <div class="countdown-item">
-                        <div class="countdown-number"><?php echo $menit; ?></div>
-                        <div class="countdown-label">Menit</div>
-                    </div>
-                </div>
-            </div>
+             
             
             <a href="daftar.php" class="btn btn-outline">
                 <i class="fas fa-sign-out-alt"></i>Keluar
