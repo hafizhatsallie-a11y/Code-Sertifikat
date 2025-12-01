@@ -198,18 +198,26 @@ $pdf->Image($depan, 0, 0, 330, 210);
 // nomor sertifikat
 $pdf->SetFont('helvetica', '', 16);
 $pdf->SetTextColor(0, 0, 0);
-$text_width = $pdf->GetStringWidth($nomor_sertifikat);
+
 $spacing = 1;
+$text_width = $pdf->GetStringWidth($nomor_sertifikat);
 $total_width = $text_width + ($spacing * (strlen($nomor_sertifikat) - 1));
-$start_x = 80 + (170 - $total_width) / 2;
+
+$page_center_x = 330 / 2;
+$start_x = $page_center_x - ($total_width / 2); // titik awal di tengah
 $current_x = $start_x;
+$y_position = 45; // ubah sesuai kebutuhan posisi vertikal
 
 for ($i = 0; $i < strlen($nomor_sertifikat); $i++) {
     $char = substr($nomor_sertifikat, $i, 1);
-    $pdf->SetXY($current_x, 45);
-    $pdf->Cell($pdf->GetStringWidth($char), 10, $char, 0, 0, 'L');
-    $current_x += $pdf->GetStringWidth($char) + $spacing;
+    $char_width = $pdf->GetStringWidth($char);
+
+    $pdf->SetXY($current_x, $y_position);
+    $pdf->Cell($char_width, 10, $char, 0, 0, 'L');
+
+    $current_x += $char_width + $spacing;
 }
+
 
 // nama peserta
 $pdf->SetFont('Pacifico', '', 42);
