@@ -1,0 +1,71 @@
+/* Dashboard Sertifikat PKL */
+
+body {
+    background-color: #f5f7fa;
+    font-family: Arial, sans-serif;
+}
+
+.navbar {
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.btn {
+    border-radius: 8px;
+    font-weight: 600;
+}
+
+.btn-dark,
+.btn-primary {
+    padding: 8px 14px;
+}
+
+.container .card {
+    border-radius: 10px;
+}
+
+.card-header {
+    font-size: 17px;
+}
+
+.table {
+    font-size: 15px;
+}
+
+.table thead th {
+    text-align: center;
+}
+
+.table tbody td {
+    vertical-align: middle;
+}
+
+.table tbody td:nth-child(1),
+.table tbody td:nth-child(5) {
+    text-align: center;
+}
+
+.shadow-sm {
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+/* Ringkasan kartu */
+.p-3 {
+    border-radius: 10px;
+}
+
+/* Button action dashboard */
+.d-flex.gap-3 .btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Hover */
+.table tbody tr:hover {
+    background-color: #eaf3ff;
+}
+
+.btn-warning,
+.btn-danger {
+    padding: 4px 8px;
+}
