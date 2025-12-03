@@ -1,0 +1,100 @@
+body {
+    background-color: #f5f6f8;
+    font-family: 'Poppins', sans-serif;
+}
+
+/* Navbar */
+.navbar {
+    padding: 14px 20px;
+}
+
+.navbar-brand span {
+    font-size: 18px;
+    color: #000000;
+}
+
+/* Action Buttons */
+.btn-dark {
+    background-color: #ff3700;
+    border: none;
+}
+
+.btn-dark.btn-dark:primary {
+    background-color: #1962bc;
+}
+
+.btn-primary {
+    background-color: #007bff;
+    border: none;
+}
+
+.btn-primary:hover {
+    background-color: #0069d9;
+}
+
+.btn-secondary {
+    background-color: #205e98;
+    border: none;
+}
+
+.btn-secondary:hover {
+    background-color: #2899db;
+}
+
+/* Card Stats */
+.card.bg-primary {
+    background-color: #007bff !important;
+    border-radius: 12px;
+}
+
+/* Table */
+.table {
+    margin: 0;
+}
+
+.table thead {
+    background-color: #0f6ce6;
+    color: white;
+}
+
+.table tbody tr:hover {
+    background-color: #eef1f5;
+}
+
+/* Buttons inside table */
+.btn-warning {
+    background-color: #ffb200;
+    border: none;
+    color: black;
+}
+
+.btn-warning:hover {
+    background-color: #e09d00;
+}
+
+.btn-danger {
+    background-color: #d9534f;
+    border: none;
+}
+
+.btn-danger:hover {
+    background-color: #c0392b;
+}
+
+/* Table container */
+.card {
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+/* Alert styling */
+.alert {
+    border-radius: 10px;
+}
+
+/* Badge */
+.badge {
+    padding: 8px 14px;
+    font-size: 14px;
+    border-radius: 8px;
+}

@@ -1,0 +1,476 @@
+:root {
+    --primary: #00008B;
+    --primary-light: #1a1acd;
+    --primary-dark: #000066;
+    --text-dark: #1a1a1a;
+    --text-light: #666666;
+    --border-color: #e0e0e0;
+    --bg-light: #f8f9ff;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: linear-gradient(135deg, #f5f7fc 0%, #e8ecff 100%);
+    min-height: 100vh;
+    color: var(--text-dark);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* ===========================
+   CONTAINER
+   =========================== */
+.container {
+    padding: 20px;
+}
+
+/* ===========================
+   CARDS
+   =========================== */
+.card {
+    border: none;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 139, 0.12);
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    box-shadow: 0 6px 24px rgba(0, 0, 139, 0.15);
+}
+
+.card h4 {
+    color: #dc3545;
+    font-weight: 700;
+    font-size: 1.5rem;
+}
+
+.card h4 i {
+    margin-right: 12px;
+}
+
+/* ===========================
+   WARNING BOX
+   =========================== */
+.warning-box {
+    background-color: #fff3cd;
+    border-left: 4px solid #ffc107;
+    padding: 18px;
+    border-radius: 10px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: flex-start;
+}
+
+.warning-box i {
+    color: #ff6b6b;
+    margin-right: 12px;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.warning-box strong {
+    color: #856404;
+    font-weight: 700;
+}
+
+.warning-box::before {
+    content: '';
+    display: block;
+}
+
+/* ===========================
+   PESERTA INFO
+   =========================== */
+.peserta-info {
+    background-color: var(--bg-light);
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 24px;
+    border-left: 4px solid var(--primary);
+    transition: all 0.3s ease;
+}
+
+.peserta-info:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 139, 0.1);
+}
+
+.peserta-info label {
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 6px;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+}
+
+.peserta-info label i {
+    margin-right: 8px;
+    color: var(--primary);
+}
+
+.peserta-info p {
+    color: var(--text-dark);
+    margin: 0 0 16px 0;
+    font-size: 1.05rem;
+    font-weight: 500;
+    padding-left: 28px;
+}
+
+.peserta-info p:last-child {
+    margin-bottom: 0;
+}
+
+/* ===========================
+   FORMS
+   =========================== */
+.form-label {
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 8px;
+    font-size: 0.95rem;
+}
+
+.form-label .text-danger {
+    color: #dc3545;
+    margin-left: 2px;
+}
+
+.form-control {
+    border: 2px solid var(--border-color);
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 0.2rem rgba(0, 0, 139, 0.15);
+}
+
+.form-control::placeholder {
+    color: #999;
+}
+
+.form-text {
+    color: var(--text-light);
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+}
+
+.form-text i {
+    margin-right: 6px;
+    color: var(--primary);
+}
+
+/* ===========================
+   BUTTONS
+   =========================== */
+.btn {
+    border-radius: 10px;
+    font-weight: 600;
+    padding: 12px 24px;
+    transition: all 0.3s ease;
+    border: none;
+    font-size: 0.95rem;
+}
+
+.btn-primary {
+    background-color: var(--primary);
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 139, 0.25);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+}
+
+.btn-danger {
+    background-color: #dc3545;
+    color: white;
+}
+
+.btn-danger:hover {
+    background-color: #c82333;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.25);
+}
+
+.btn-secondary {
+    background-color: var(--text-light);
+    color: white;
+}
+
+.btn-secondary:hover {
+    background-color: #555;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 102, 102, 0.25);
+}
+
+.btn-lg {
+    padding: 14px 28px;
+    font-size: 1rem;
+}
+
+.btn i {
+    margin-right: 8px;
+}
+
+/* ===========================
+   BUTTON GROUP
+   =========================== */
+.btn-group-custom {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.btn-group-custom button,
+.btn-group-custom a {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ===========================
+   ALERT
+   =========================== */
+.alert {
+    border: none;
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+    border-left: 4px solid #28a745;
+}
+
+.alert-warning {
+    background-color: #fff3cd;
+    color: #856404;
+    border-left: 4px solid #ffc107;
+}
+
+.alert-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+    border-left: 4px solid #dc3545;
+}
+
+.alert-info {
+    background-color: #d1ecf1;
+    color: #0c5460;
+    border-left: 4px solid var(--primary);
+}
+
+.alert i {
+    margin-right: 8px;
+    flex-shrink: 0;
+}
+
+.alert-dismissible .btn-close {
+    filter: brightness(0.6);
+}
+
+/* ===========================
+   SCROLLBAR
+   =========================== */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--primary);
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-dark);
+}
+
+/* ===========================
+   RESPONSIVE
+   =========================== */
+@media (max-width: 768px) {
+    .container {
+        padding: 12px;
+    }
+
+    .card {
+        border-radius: 12px;
+    }
+
+    .card h4 {
+        font-size: 1.3rem;
+    }
+
+    .btn-group-custom {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .btn-group-custom button,
+    .btn-group-custom a {
+        flex: 1;
+    }
+
+    .btn {
+        padding: 10px 16px;
+        font-size: 0.9rem;
+    }
+
+    .btn-lg {
+        padding: 12px 20px;
+        font-size: 0.95rem;
+    }
+
+    .warning-box {
+        padding: 14px;
+        font-size: 0.9rem;
+    }
+
+    .peserta-info {
+        padding: 16px;
+    }
+
+    .peserta-info label {
+        font-size: 0.85rem;
+    }
+
+    .peserta-info p {
+        font-size: 1rem;
+    }
+
+    .form-label {
+        font-size: 0.9rem;
+    }
+
+    .form-control {
+        padding: 10px 14px;
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: 8px;
+    }
+
+    .card {
+        border-radius: 10px;
+        padding: 16px;
+    }
+
+    .card h4 {
+        font-size: 1.1rem;
+        margin-bottom: 16px;
+    }
+
+    .warning-box {
+        padding: 12px;
+        font-size: 0.85rem;
+        margin-bottom: 16px;
+    }
+
+    .warning-box i {
+        font-size: 1rem;
+        margin-right: 8px;
+    }
+
+    .peserta-info {
+        padding: 12px;
+        margin-bottom: 16px;
+    }
+
+    .peserta-info label {
+        font-size: 0.8rem;
+        margin-bottom: 4px;
+    }
+
+    .peserta-info p {
+        font-size: 0.95rem;
+        margin-bottom: 12px;
+        padding-left: 24px;
+    }
+
+    .form-label {
+        font-size: 0.85rem;
+        margin-bottom: 6px;
+    }
+
+    .form-control {
+        padding: 8px 12px;
+        font-size: 0.85rem;
+    }
+
+    .form-text {
+        font-size: 0.8rem;
+    }
+
+    .btn {
+        padding: 8px 12px;
+        font-size: 0.8rem;
+    }
+
+    .btn-lg {
+        padding: 10px 16px;
+        font-size: 0.85rem;
+    }
+
+    .btn-group-custom {
+        gap: 8px;
+        margin-top: 16px;
+    }
+
+    .alert {
+        padding: 10px 12px;
+        font-size: 0.85rem;
+    }
+
+    .alert i {
+        font-size: 0.9rem;
+        margin-right: 6px;
+    }
+}
+
+/* ===========================
+   PRINT STYLE
+   =========================== */
+@media print {
+    body {
+        background: white;
+    }
+
+    .btn-group-custom {
+        display: none;
+    }
+
+    .card {
+        box-shadow: none;
+        border: 1px solid var(--border-color);
+    }
+}

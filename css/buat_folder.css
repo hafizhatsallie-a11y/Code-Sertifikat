@@ -1,0 +1,100 @@
+body {
+    background: #f4f6ff;
+    font-family: Arial, sans-serif;
+    color: #222;
+}
+
+.navbar-custom {
+    background: #00008B;
+    padding: 10px;
+}
+
+.navbar-custom .navbar-brand,
+.navbar-custom .btn-light,
+.navbar-custom .nav-link {
+    color: #fff !important;
+    font-weight: 600;
+}
+
+.card {
+    border: 1px solid #00008B33;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.card-header {
+    background: #00008B;
+    color: #fff;
+    font-weight: 600;
+}
+
+.btn-primary {
+    background: #00008B;
+    border-color: #00008B;
+}
+
+.btn-primary:hover {
+    background: #00006B;
+}
+
+.btn-warning,
+.btn-danger,
+.btn-secondary {
+    font-size: 13px;
+}
+
+.folder-item,
+.peserta-item,
+.peserta-in-folder {
+    padding: 8px 12px;
+    border-radius: 8px;
+    margin-bottom: 6px;
+    background: #fff;
+    border: 1px solid #00008B33;
+    cursor: grab;
+}
+
+.folder-item:hover,
+.peserta-item:hover,
+.peserta-in-folder:hover {
+    background: #f0f3ff;
+}
+
+.folder-actions .btn {
+    padding: 4px 6px;
+}
+
+.peserta-source,
+.folder-drop-zone {
+    border: 2px dashed #00008B;
+    padding: 10px;
+    border-radius: 10px;
+    min-height: 80px;
+    background: #ffffff;
+}
+
+.folder-drop-zone.drag-over {
+    background: #DFE6FF;
+    border-color: #00006B;
+}
+
+.peserta-in-folder {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 15px;
+    color: #666;
+    font-size: 14px;
+}
+
+.dragging {
+    opacity: 0.4;
+}
+.peserta-item,
+.peserta-in-folder {
+    transition: background 0.2s, transform 0.2s;
+}
