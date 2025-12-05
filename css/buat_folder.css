@@ -1,100 +1,561 @@
+/* Color Variables - Sesuai dengan dashboard */
+:root {
+    --primary-dark: #667eea;
+    --primary-light: #764ba2;
+    --secondary: #6c757d;
+    --success: #28a745;
+    --danger: #dc3545;
+    --warning: #ffc107;
+    --info: #17a2b8;
+    --light: #f8f9fa;
+    --dark: #343a40;
+    --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+/* Base Styles */
 body {
-    background: #f4f6ff;
-    font-family: Arial, sans-serif;
-    color: #222;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
+    min-height: 100vh;
+    color: #333;
 }
 
+/* Navbar - Sama dengan dashboard */
 .navbar-custom {
-    background: #00008B;
-    padding: 10px;
+    background: var(--gradient-primary);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
 }
 
-.navbar-custom .navbar-brand,
-.navbar-custom .btn-light,
-.navbar-custom .nav-link {
-    color: #fff !important;
+.navbar-custom .navbar-brand {
+    color: white !important;
     font-weight: 600;
 }
 
+.navbar-custom .btn {
+    border-radius: 20px;
+    padding: 6px 15px;
+}
+
+/* Card Styling - Sama dengan dashboard */
 .card {
-    border: 1px solid #00008B33;
-    border-radius: 10px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    background: white;
+    margin-bottom: 20px;
 }
 
 .card-header {
-    background: #00008B;
-    color: #fff;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-bottom: 1px solid #dee2e6;
+    padding: 15px 20px;
     font-weight: 600;
+    color: #2d3748;
+    border-radius: 15px 15px 0 0 !important;
+}
+
+/* Form Styling */
+.form-control, .form-select {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 10px 15px;
+    transition: all 0.3s;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--primary-dark);
+    box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.25);
+}
+
+/* Button Styling - Sama dengan dashboard */
+.btn {
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-weight: 500;
+    transition: all 0.3s;
 }
 
 .btn-primary {
-    background: #00008B;
-    border-color: #00008B;
+    background: var(--gradient-primary);
+    border: none;
 }
 
 .btn-primary:hover {
-    background: #00006B;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
 }
 
-.btn-warning,
-.btn-danger,
-.btn-secondary {
-    font-size: 13px;
+/* Stat Cards - Sama dengan dashboard */
+.card-stat {
+    border: none;
+    border-radius: 15px;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    transition: transform 0.3s, box-shadow 0.3s;
+    height: 100%;
 }
 
-.folder-item,
-.peserta-item,
-.peserta-in-folder {
-    padding: 8px 12px;
-    border-radius: 8px;
-    margin-bottom: 6px;
-    background: #fff;
-    border: 1px solid #00008B33;
-    cursor: grab;
+.card-stat:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
 }
 
-.folder-item:hover,
-.peserta-item:hover,
-.peserta-in-folder:hover {
-    background: #f0f3ff;
-}
-
-.folder-actions .btn {
-    padding: 4px 6px;
-}
-
-.peserta-source,
-.folder-drop-zone {
-    border: 2px dashed #00008B;
-    padding: 10px;
-    border-radius: 10px;
-    min-height: 80px;
-    background: #ffffff;
-}
-
-.folder-drop-zone.drag-over {
-    background: #DFE6FF;
-    border-color: #00006B;
-}
-
-.peserta-in-folder {
+.stat-icon {
+    width: 60px;
+    height: 60px;
+    background: var(--gradient-primary);
+    border-radius: 12px;
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: center;
+    margin-right: 15px;
+    color: white;
+    font-size: 1.5rem;
 }
 
-.empty-state {
-    text-align: center;
+.stat-content {
+    flex: 1;
+}
+
+.stat-number {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 5px;
+    color: #2d3748;
+}
+
+.stat-label {
+    color: #718096;
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+/* Table Card - Sama dengan dashboard */
+.card-table {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    overflow: hidden;
+}
+
+.card-table .table {
+    margin: 0;
+}
+
+.card-table .table thead th {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    color: #4a5568;
+    font-weight: 600;
     padding: 15px;
-    color: #666;
+}
+
+.card-table .table tbody td {
+    padding: 15px;
+    vertical-align: middle;
+    border-color: #edf2f7;
+}
+
+.card-table .table tbody tr:hover {
+    background-color: #f7fafc;
+}
+
+/* Folder Cards - Sama dengan dashboard */
+.folder-card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+    height: 100%;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    border: 1px solid #e2e8f0;
+}
+
+.folder-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    border-color: #cbd5e0;
+}
+
+.folder-card .card-body {
+    padding: 20px;
+}
+
+.folder-card .card-title {
+    color: #2d3748;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.folder-badge {
+    font-size: 0.75rem;
+    padding: 4px 8px;
+    border-radius: 20px;
+    background: var(--gradient-primary);
+}
+
+/* Folder List - Sama dengan dashboard */
+.folder-list {
+    max-height: 200px;
+    overflow-y: auto;
+    margin: 15px 0;
+    padding-right: 5px;
+}
+
+.folder-list-item {
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    background: white;
+    border-radius: 8px;
+    border-left: 4px solid var(--primary-dark);
+    font-size: 0.9rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    transition: all 0.2s;
+}
+
+.folder-list-item:hover {
+    background: #f7fafc;
+    transform: translateX(2px);
+}
+
+.folder-list-item .fw-medium {
+    color: #2d3748;
+    font-weight: 500;
+}
+
+.folder-list-item small {
+    color: #718096;
+    font-size: 0.8rem;
+}
+
+/* Empty States - Sama dengan dashboard */
+.empty-state {
+    color: #a0aec0;
+    font-style: italic;
+    padding: 30px 15px;
+    text-align: center;
+    background: #f7fafc;
+    border-radius: 8px;
+    border: 2px dashed #e2e8f0;
+}
+
+.empty-state i {
+    color: #cbd5e0;
+    margin-bottom: 10px;
+}
+
+/* Scrollbar Styling */
+.folder-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.folder-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.folder-list::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 10px;
+}
+
+.folder-list::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Drag and Drop Specific Styles */
+.peserta-source {
+    max-height: 450px;
+    overflow-y: auto;
+    padding-right: 5px;
+    border-radius: 8px;
+    background: #f8f9fa;
+    padding: 10px;
+}
+
+.peserta-item {
+    padding: 12px 15px;
+    margin-bottom: 8px;
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    cursor: move;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: flex-start;
+    min-height: 60px;
+    word-break: break-word;
+    overflow: hidden;
+}
+
+.peserta-item:hover {
+    background: #f0f7ff;
+    border-color: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(102, 126, 234, 0.1);
+}
+
+.peserta-item.dragging {
+    opacity: 0.5;
+    background: #e3f2fd;
+}
+
+.peserta-avatar {
+    margin-right: 12px;
+    color: var(--primary-dark);
+    font-size: 20px;
+    margin-top: 2px;
+}
+
+.peserta-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.peserta-nama {
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     font-size: 14px;
 }
 
-.dragging {
-    opacity: 0.4;
+.peserta-sekolah {
+    font-size: 12px;
+    color: #666;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
 }
-.peserta-item,
+
+.school-icon {
+    color: var(--primary-dark);
+    margin-right: 6px;
+    font-size: 12px;
+}
+
+/* Folder Drop Zone */
+.folder-drop-zone {
+    min-height: 120px;
+    max-height: 200px;
+    overflow-y: auto;
+    padding: 15px;
+    background: #f5f5f5;
+    border: 2px dashed #bdc3c7;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.folder-drop-zone.drag-over {
+    background: #e8f4ff;
+    border-color: var(--primary-dark);
+    border-style: solid;
+}
+
+/* Peserta dalam Folder */
 .peserta-in-folder {
-    transition: background 0.2s, transform 0.2s;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    word-break: break-word;
+}
+
+.peserta-in-folder .peserta-info {
+    padding-right: 10px;
+}
+
+/* Search Container */
+.search-container {
+    position: relative;
+    margin-bottom: 15px;
+}
+
+.search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6c757d;
+    z-index: 10;
+}
+
+.search-input {
+    border-radius: 8px !important;
+    padding-left: 40px !important;
+    border-color: #dee2e6 !important;
+}
+
+.search-input:focus {
+    border-color: var(--primary-dark) !important;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
+}
+
+.clear-search {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #6c757d;
+    cursor: pointer;
+    z-index: 10;
+    padding: 5px;
+}
+
+.clear-search:hover {
+    color: var(--danger);
+}
+
+.peserta-counter {
+    font-size: 12px;
+    color: #6c757d;
+    text-align: center;
+    margin-top: 10px;
+    padding: 8px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    border: 1px solid #e9ecef;
+}
+
+/* Badge Styling */
+.badge {
+    font-weight: 500;
+    padding: 5px 10px;
+    border-radius: 20px;
+}
+
+/* Modal Styling */
+.modal-content {
+    border-radius: 12px;
+    border: none;
+}
+
+.modal-header {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-bottom: 1px solid #dee2e6;
+}
+
+/* Animation for drag and drop */
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+    100% { transform: scale(1); }
+}
+
+.drag-over {
+    animation: pulse 0.5s infinite;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .peserta-source {
+        max-height: 300px;
+    }
+    
+    .folder-drop-zone {
+        max-height: 150px;
+    }
+    
+    .peserta-nama {
+        font-size: 13px;
+    }
+    
+    .peserta-sekolah {
+        font-size: 11px;
+    }
+    
+    .peserta-item {
+        padding: 10px;
+        min-height: 55px;
+    }
+    
+    .card-stat .card-body {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .stat-icon {
+        margin-right: 0;
+        margin-bottom: 15px;
+    }
+    
+    .btn-group {
+        flex-wrap: wrap;
+        gap: 5px;
+    }
+    
+    .folder-card {
+        margin-bottom: 15px;
+    }
+}
+
+/* Hover effects untuk semua card */
+.card:hover {
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    transition: all 0.3s ease;
+}
+
+/* Button group styling */
+.btn-group .btn {
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-size: 0.85rem;
+    margin-right: 5px;
+}
+
+/* View folder button */
+.view-folder-btn {
+    font-size: 0.8rem;
+    padding: 5px 12px;
+    border-radius: 20px;
+}
+
+/* Alert styling */
+.alert {
+    border-radius: 10px;
+    border: none;
+}
+
+/* Custom scrollbar untuk semua container scrollable */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Folder item hover */
+.folder-item:hover {
+    background-color: #f8f9fa;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* Folder actions */
+.folder-actions .btn {
+    margin-left: 5px;
+    padding: 4px 8px;
+    font-size: 12px;
 }

@@ -1,0 +1,454 @@
+/* Color Variables - Sesuai dengan dashboard */
+:root {
+    --primary-dark: #667eea;
+    --primary-light: #764ba2;
+    --secondary: #6c757d;
+    --success: #28a745;
+    --danger: #dc3545;
+    --warning: #ffc107;
+    --info: #17a2b8;
+    --light: #f8f9fa;
+    --dark: #343a40;
+    --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+/* Base Styles */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
+    min-height: 100vh;
+    color: #333;
+    padding-top: 20px;
+}
+
+/* Container */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Header Box - Sama dengan dashboard */
+.header-box {
+    background: white;
+    padding: 25px 30px;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    border: 1px solid #e2e8f0;
+    margin-bottom: 30px;
+}
+
+.header-box h2 {
+    color: #2d3748;
+    font-weight: 700;
+    margin-bottom: 8px;
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.header-box p {
+    color: #718096;
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+/* Button Styling - Sama dengan dashboard */
+.btn {
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-weight: 500;
+    transition: all 0.3s;
+}
+
+.btn-primary {
+    background: var(--gradient-primary);
+    border: none;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+.btn-outline-primary {
+    border: 2px solid var(--primary-dark);
+    color: var(--primary-dark);
+}
+
+.btn-outline-primary:hover {
+    background: var(--gradient-primary);
+    color: white;
+    border-color: transparent;
+}
+
+.btn-outline-danger {
+    border: 2px solid var(--danger);
+    color: var(--danger);
+}
+
+.btn-outline-danger:hover {
+    background: var(--danger);
+    color: white;
+}
+
+.btn-sm {
+    padding: 6px 12px;
+    font-size: 0.85rem;
+    border-radius: 6px;
+}
+
+/* Card Styling - Sama dengan dashboard */
+.card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    background: white;
+    overflow: hidden;
+}
+
+.card-body {
+    padding: 0;
+}
+
+/* Table Styling - Sama dengan dashboard */
+.table {
+    margin-bottom: 0;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.table thead th {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-bottom: 2px solid #dee2e6;
+    color: #4a5568;
+    font-weight: 600;
+    padding: 18px 20px;
+    text-transform: uppercase;
+    font-size: 0.9rem;
+    letter-spacing: 0.5px;
+    border-top: none;
+}
+
+.table tbody td {
+    padding: 18px 20px;
+    vertical-align: middle;
+    border-bottom: 1px solid #edf2f7;
+    color: #4a5568;
+    font-weight: 500;
+}
+
+.table tbody tr {
+    transition: all 0.2s;
+}
+
+.table tbody tr:hover {
+    background-color: #f7fafc;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.table-hover tbody tr:hover td {
+    background-color: #f7fafc;
+}
+
+/* Badge Styling - Sama dengan dashboard */
+.badge {
+    font-weight: 500;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+}
+
+.bg-success {
+    background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+}
+
+.bg-secondary {
+    background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+}
+
+/* Action Buttons */
+.d-flex.gap-2 {
+    gap: 8px;
+}
+
+/* Modal-like confirmation */
+[onclick*="confirm"] {
+    transition: all 0.2s;
+}
+
+[onclick*="confirm"]:hover {
+    transform: translateY(-1px);
+}
+
+/* File name styling */
+td:first-child, td:nth-child(2) {
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    color: #2d3748;
+    max-width: 250px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Status column width */
+td:nth-child(3) {
+    width: 100px;
+}
+
+/* Date column styling */
+td:nth-child(4) {
+    color: #718096;
+    font-size: 0.9rem;
+}
+
+/* Action column */
+td:last-child {
+    width: 180px;
+}
+
+/* Empty State */
+.table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.table tbody:empty::after {
+    content: "Belum ada template yang diupload";
+    display: table-row;
+    height: 200px;
+}
+
+.table tbody:empty::after td {
+    text-align: center;
+    color: #a0aec0;
+    font-style: italic;
+    padding: 50px 20px;
+    border: none;
+}
+
+/* Responsive Design */
+@media (max-width: 992px) {
+    .header-box {
+        flex-direction: column;
+        text-align: center;
+        gap: 20px;
+    }
+    
+    .header-box .btn {
+        align-self: center;
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 15px;
+    }
+    
+    .header-box {
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .header-box h2 {
+        font-size: 1.5rem;
+    }
+    
+    .table-responsive {
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    
+    .table thead {
+        display: none;
+    }
+    
+    .table tbody tr {
+        display: block;
+        margin-bottom: 15px;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        overflow: hidden;
+        background: white;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    
+    .table tbody td {
+        display: block;
+        text-align: right;
+        padding: 12px 15px;
+        border-bottom: 1px solid #f7fafc;
+        position: relative;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    
+    .table tbody td:before {
+        content: attr(data-label);
+        position: absolute;
+        left: 15px;
+        top: 12px;
+        font-weight: 600;
+        color: #4a5568;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+    }
+    
+    .table tbody td[data-label] {
+        padding-left: 120px;
+        text-align: left;
+    }
+    
+    td:first-child, td:nth-child(2) {
+        max-width: none;
+        white-space: normal;
+        word-break: break-all;
+    }
+    
+    td:last-child {
+        width: 100%;
+        border-bottom: none;
+    }
+    
+    .d-flex.gap-2 {
+        justify-content: flex-end;
+        gap: 10px;
+    }
+    
+    /* Set data labels for responsive table */
+    td:nth-child(1):before { content: "File Depan"; }
+    td:nth-child(2):before { content: "File Belakang"; }
+    td:nth-child(3):before { content: "Status"; }
+    td:nth-child(4):before { content: "Tanggal Upload"; }
+    td:nth-child(5):before { content: "Aksi"; }
+}
+
+@media (max-width: 576px) {
+    .btn {
+        padding: 8px 16px;
+        font-size: 0.9rem;
+    }
+    
+    .btn-primary {
+        width: 100%;
+    }
+    
+    .d-flex.gap-2 {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .d-flex.gap-2 .btn {
+        flex: 1;
+        min-width: 120px;
+        text-align: center;
+    }
+}
+
+/* Animation for table rows */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.table tbody tr {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* Custom scrollbar */
+.table-responsive::-webkit-scrollbar {
+    height: 8px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 10px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Card hover effect */
+.card:hover {
+    box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+    transition: all 0.3s ease;
+}
+
+/* Button group hover effects */
+.btn-outline-primary:hover .badge,
+.btn-outline-danger:hover .badge {
+    background: white !important;
+    color: inherit !important;
+}
+
+/* File name with icon */
+td:first-child::before,
+td:nth-child(2)::before {
+    content: "📄 ";
+    margin-right: 5px;
+}
+
+/* Active template highlight */
+tr:has(.badge.bg-success) {
+    background-color: rgba(40, 167, 69, 0.05) !important;
+}
+
+tr:has(.badge.bg-success):hover {
+    background-color: rgba(40, 167, 69, 0.1) !important;
+}
+
+/* Header gradient text effect */
+.header-box h2 {
+    position: relative;
+    display: inline-block;
+}
+
+.header-box h2::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 0;
+    width: 60px;
+    height: 3px;
+    background: var(--gradient-primary);
+    border-radius: 2px;
+}
+
+/* Loading state for buttons */
+.btn-loading {
+    position: relative;
+    pointer-events: none;
+    opacity: 0.8;
+}
+
+.btn-loading::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    top: 50%;
+    left: 50%;
+    margin: -8px 0 0 -8px;
+    border: 2px solid transparent;
+    border-top-color: white;
+    border-radius: 50%;
+    animation: button-loading-spinner 0.8s linear infinite;
+}
+
+@keyframes button-loading-spinner {
+    from { transform: rotate(0turn); }
+    to { transform: rotate(1turn); }
+}

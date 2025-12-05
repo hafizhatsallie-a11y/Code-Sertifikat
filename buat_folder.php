@@ -38,7 +38,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_folder'])) {
                 INSERT INTO folder_peserta (nama_folder, deskripsi, dibuat_pada)
                 VALUES (?, ?, NOW())
             ");
-            
+
             mysqli_stmt_bind_param($stmt, "ss", $nama_folder, $deskripsi);
             $q = mysqli_stmt_execute($stmt);
 
@@ -50,7 +50,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_folder'])) {
                 $alert = 'Gagal membuat folder: ' . mysqli_error($koneksi);
                 $alert_type = 'danger';
             }
-            
+
             mysqli_stmt_close($stmt);
         }
     }
@@ -85,7 +85,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['edit_folder'])) {
                 SET nama_folder = ?, deskripsi = ?
                 WHERE id = ?
             ");
-            
+
             mysqli_stmt_bind_param($stmt, "ssi", $nama_folder, $deskripsi, $folder_id);
             $q = mysqli_stmt_execute($stmt);
 
@@ -97,7 +97,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['edit_folder'])) {
                 $alert = 'Gagal memperbarui folder: ' . mysqli_error($koneksi);
                 $alert_type = 'danger';
             }
-            
+
             mysqli_stmt_close($stmt);
         }
     }
@@ -106,11 +106,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['edit_folder'])) {
 // Handle hapus folder
 if (isset($_GET['delete_id'])) {
     $delete_id = intval($_GET['delete_id']);
-    
+
     // Hapus folder
     $stmt = mysqli_prepare($koneksi, "DELETE FROM folder_peserta WHERE id = ?");
     mysqli_stmt_bind_param($stmt, "i", $delete_id);
-    
+
     if (mysqli_stmt_execute($stmt)) {
         $alert = 'Folder berhasil dihapus.';
         $alert_type = 'success';
@@ -118,17 +118,17 @@ if (isset($_GET['delete_id'])) {
         $alert = 'Gagal menghapus folder: ' . mysqli_error($koneksi);
         $alert_type = 'danger';
     }
-    
+
     mysqli_stmt_close($stmt);
 }
 
 // Handle drag and drop (AJAX)
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['action'] == 'add_peserta_to_folder') {
     header('Content-Type: application/json');
-    
+
     $folder_id = intval($_POST['folder_id']);
     $peserta_id = intval($_POST['peserta_id']);
-    
+
     // Cek apakah peserta sudah ada di folder
     $stmt_check = mysqli_prepare($koneksi, "
         SELECT id FROM folder_peserta_mapping 
@@ -138,26 +138,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
     mysqli_stmt_execute($stmt_check);
     $result_check = mysqli_stmt_get_result($stmt_check);
     mysqli_stmt_close($stmt_check);
-    
+
     if (mysqli_num_rows($result_check) > 0) {
         echo json_encode(['success' => false, 'message' => 'Peserta sudah ada di folder ini']);
         exit;
     }
-    
+
     // Insert peserta ke folder
     $stmt = mysqli_prepare($koneksi, "
         INSERT INTO folder_peserta_mapping (folder_id, peserta_id, ditambahkan_pada)
         VALUES (?, ?, NOW())
     ");
-    
+
     mysqli_stmt_bind_param($stmt, "ii", $folder_id, $peserta_id);
-    
+
     if (mysqli_stmt_execute($stmt)) {
         echo json_encode(['success' => true, 'message' => 'Peserta berhasil ditambahkan ke folder']);
     } else {
         echo json_encode(['success' => false, 'message' => 'Gagal menambahkan peserta: ' . mysqli_error($koneksi)]);
     }
-    
+
     mysqli_stmt_close($stmt);
     exit;
 }
@@ -165,18 +165,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
 // Handle remove peserta dari folder (AJAX)
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['action'] == 'remove_peserta_from_folder') {
     header('Content-Type: application/json');
-    
+
     $mapping_id = intval($_POST['mapping_id']);
-    
+
     $stmt = mysqli_prepare($koneksi, "DELETE FROM folder_peserta_mapping WHERE id = ?");
     mysqli_stmt_bind_param($stmt, "i", $mapping_id);
-    
+
     if (mysqli_stmt_execute($stmt)) {
         echo json_encode(['success' => true, 'message' => 'Peserta berhasil dihapus dari folder']);
     } else {
         echo json_encode(['success' => false, 'message' => 'Gagal menghapus peserta']);
     }
-    
+
     mysqli_stmt_close($stmt);
     exit;
 }
@@ -199,9 +199,12 @@ $result_folders = mysqli_stmt_get_result($stmt);
 $folders = mysqli_fetch_all($result_folders, MYSQLI_ASSOC);
 mysqli_stmt_close($stmt);
 
-// Ambil semua peserta yang belum di-assign
+// Ambil semua peserta dengan asal sekolah
 $stmt = mysqli_prepare($koneksi, "
-    SELECT DISTINCT p.id, p.nama 
+    SELECT DISTINCT 
+        p.id, 
+        p.nama,
+        p.sekolah
     FROM peserta_pkl p
     ORDER BY p.nama ASC
 ");
@@ -210,14 +213,15 @@ $result_peserta = mysqli_stmt_get_result($stmt);
 $peserta_list = mysqli_fetch_all($result_peserta, MYSQLI_ASSOC);
 mysqli_stmt_close($stmt);
 
-// Ambil peserta per folder
+// Ambil peserta per folder dengan asal sekolah
 $peserta_per_folder = [];
 $stmt = mysqli_prepare($koneksi, "
     SELECT 
         fpm.id as mapping_id,
         fpm.folder_id,
         p.id,
-        p.nama
+        p.nama,
+        p.sekolah
     FROM folder_peserta_mapping fpm
     JOIN peserta_pkl p ON fpm.peserta_id = p.id
     ORDER BY fpm.folder_id, p.nama ASC
@@ -249,7 +253,7 @@ mysqli_stmt_close($stmt);
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
         <div class="container-fluid">
-            <a class="navbar-brand" href="#">
+            <a class="navbar-brand" href="buat_folder.php">
                 <i class="fas fa-folder-open me-2"></i> Kelola Folder Peserta
             </a>
 
@@ -293,11 +297,11 @@ mysqli_stmt_close($stmt);
                                 <label class="form-label">
                                     <i class="fas fa-folder me-1"></i> Nama Folder <span class="text-danger">*</span>
                                 </label>
-                                <input 
-                                    type="text" 
-                                    name="nama_folder" 
-                                    class="form-control" 
-                                    placeholder="Contoh: Batch 1, SMK Negeri 1, dll" 
+                                <input
+                                    type="text"
+                                    name="nama_folder"
+                                    class="form-control"
+                                    placeholder="Contoh: Batch 1, SMK Negeri 1, dll"
                                     value="<?php echo isset($_POST['nama_folder']) ? htmlspecialchars($_POST['nama_folder']) : ''; ?>"
                                     required>
                                 <small class="text-muted">Nama unik untuk pengelompokan peserta</small>
@@ -307,10 +311,10 @@ mysqli_stmt_close($stmt);
                                 <label class="form-label">
                                     <i class="fas fa-align-left me-1"></i> Deskripsi (Opsional)
                                 </label>
-                                <textarea 
-                                    name="deskripsi" 
-                                    class="form-control" 
-                                    rows="3" 
+                                <textarea
+                                    name="deskripsi"
+                                    class="form-control"
+                                    rows="3"
                                     placeholder="Masukkan deskripsi folder..."><?php echo isset($_POST['deskripsi']) ? htmlspecialchars($_POST['deskripsi']) : ''; ?></textarea>
                                 <small class="text-muted">Deskripsi untuk memudahkan identifikasi folder</small>
                             </div>
@@ -328,7 +332,7 @@ mysqli_stmt_close($stmt);
                         <i class="fas fa-list me-2"></i> Daftar Folder (<?php echo count($folders); ?>)
                     </div>
                     <div class="card-body p-0">
-                        <div style="max-height: 400px; overflow-y: auto;">
+                        <div class="folder-list-scroll" style="max-height: 400px; overflow-y: auto;">
                             <?php if (count($folders) > 0): ?>
                                 <?php foreach ($folders as $folder): ?>
                                     <div class="folder-item m-3 mb-2">
@@ -372,21 +376,50 @@ mysqli_stmt_close($stmt);
                                 <i class="fas fa-users me-2"></i> Daftar Peserta
                             </div>
                             <div class="card-body">
+                                <!-- Fitur Pencarian -->
+                                <div class="search-container mb-3">
+                                    <i class="fas fa-search search-icon"></i>
+                                    <input
+                                        type="text"
+                                        class="form-control search-input"
+                                        id="searchPeserta"
+                                        placeholder="Cari nama atau sekolah..."
+                                        onkeyup="filterPeserta()">
+                                    <button
+                                        class="clear-search"
+                                        type="button"
+                                        onclick="clearSearch()"
+                                        style="display: none;">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+
                                 <p class="small text-muted mb-3">
                                     <i class="fas fa-info-circle me-1"></i>
                                     Drag peserta ke folder untuk menambahkannya
                                 </p>
-                                <div class="peserta-source" id="pesertaSource">
+
+                                <div class="peserta-source custom-scrollbar" id="pesertaSource">
                                     <?php if (count($peserta_list) > 0): ?>
                                         <?php foreach ($peserta_list as $peserta): ?>
-                                            <div 
-                                                class="peserta-item" 
-                                                draggable="true" 
+                                            <div
+                                                class="peserta-item"
+                                                draggable="true"
                                                 data-peserta-id="<?php echo $peserta['id']; ?>"
+                                                data-nama="<?php echo htmlspecialchars(strtolower($peserta['nama'])); ?>"
+                                                data-sekolah="<?php echo htmlspecialchars(strtolower($peserta['sekolah'] ?? '')); ?>"
                                                 ondragstart="dragStart(event)"
                                                 ondragend="dragEnd(event)">
-                                                <i class="fas fa-user-circle me-2"></i>
-                                                <?php echo htmlspecialchars($peserta['nama']); ?>
+                                                <div class="peserta-avatar">
+                                                    <i class="fas fa-user-circle"></i>
+                                                </div>
+                                                <div class="peserta-info">
+                                                    <div class="peserta-nama"><?php echo htmlspecialchars($peserta['nama']); ?></div>
+                                                    <div class="peserta-sekolah">
+                                                        <i class="fas fa-school school-icon"></i>
+                                                        <?php echo htmlspecialchars($peserta['sekolah'] ?? 'Tidak diketahui'); ?>
+                                                    </div>
+                                                </div>
                                             </div>
                                         <?php endforeach; ?>
                                     <?php else: ?>
@@ -395,6 +428,11 @@ mysqli_stmt_close($stmt);
                                             <p>Tidak ada peserta</p>
                                         </div>
                                     <?php endif; ?>
+                                </div>
+
+                                <!-- Counter Peserta -->
+                                <div class="peserta-counter">
+                                    <span id="pesertaCount"><?php echo count($peserta_list); ?></span> peserta ditemukan
                                 </div>
                             </div>
                         </div>
@@ -408,7 +446,8 @@ mysqli_stmt_close($stmt);
                             </div>
                             <div class="card-body">
                                 <?php if (count($folders) > 0): ?>
-                                    <div style="max-height: 500px; overflow-y: auto;">
+                                    <div class="folder-scroll-container" style="max-height: 500px; overflow-y: auto;">
+
                                         <?php foreach ($folders as $folder): ?>
                                             <div class="mb-4">
                                                 <h6 class="mb-3">
@@ -416,23 +455,29 @@ mysqli_stmt_close($stmt);
                                                     <?php echo htmlspecialchars($folder['nama_folder']); ?>
                                                     <span class="badge bg-info"><?php echo $folder['jumlah_peserta']; ?></span>
                                                 </h6>
-                                                
-                                                <div 
-                                                    class="folder-drop-zone" 
+
+                                                <div
+                                                    class="folder-drop-zone"
                                                     data-folder-id="<?php echo $folder['id']; ?>"
                                                     ondragover="dragOver(event)"
                                                     ondragleave="dragLeave(event)"
                                                     ondrop="dropPeserta(event)">
-                                                    
+
                                                     <?php if (isset($peserta_per_folder[$folder['id']]) && count($peserta_per_folder[$folder['id']]) > 0): ?>
                                                         <?php foreach ($peserta_per_folder[$folder['id']] as $p): ?>
                                                             <div class="peserta-in-folder">
-                                                                <span>
-                                                                    <i class="fas fa-check-circle text-success me-2"></i>
-                                                                    <?php echo htmlspecialchars($p['nama']); ?>
-                                                                </span>
-                                                                <button 
-                                                                    type="button" 
+                                                                <div class="peserta-info">
+                                                                    <div class="peserta-nama">
+                                                                        <i class="fas fa-check-circle text-success me-2"></i>
+                                                                        <?php echo htmlspecialchars($p['nama']); ?>
+                                                                    </div>
+                                                                    <div class="peserta-sekolah">
+                                                                        <i class="fas fa-school school-icon"></i>
+                                                                        <?php echo htmlspecialchars($p['sekolah'] ?? 'Tidak diketahui'); ?>
+                                                                    </div>
+                                                                </div>
+                                                                <button
+                                                                    type="button"
                                                                     class="btn btn-sm btn-danger"
                                                                     onclick="removePesertaFromFolder(<?php echo $p['mapping_id']; ?>)">
                                                                     <i class="fas fa-times"></i>
@@ -482,12 +527,12 @@ mysqli_stmt_close($stmt);
                             <label class="form-label">
                                 <i class="fas fa-folder me-1"></i> Nama Folder <span class="text-danger">*</span>
                             </label>
-                            <input 
-                                type="text" 
-                                name="nama_folder" 
-                                id="nama_folder" 
-                                class="form-control" 
-                                placeholder="Nama folder" 
+                            <input
+                                type="text"
+                                name="nama_folder"
+                                id="nama_folder"
+                                class="form-control"
+                                placeholder="Nama folder"
                                 required>
                         </div>
 
@@ -495,11 +540,11 @@ mysqli_stmt_close($stmt);
                             <label class="form-label">
                                 <i class="fas fa-align-left me-1"></i> Deskripsi
                             </label>
-                            <textarea 
-                                name="deskripsi" 
-                                id="deskripsi" 
-                                class="form-control" 
-                                rows="3" 
+                            <textarea
+                                name="deskripsi"
+                                id="deskripsi"
+                                class="form-control"
+                                rows="3"
                                 placeholder="Deskripsi folder..."></textarea>
                         </div>
                     </div>
@@ -517,8 +562,68 @@ mysqli_stmt_close($stmt);
     <script>
         let draggedPeserta = null;
 
-        // Auto-hide alerts
+        // Fungsi untuk filter peserta
+        function filterPeserta() {
+            const searchTerm = document.getElementById('searchPeserta').value.toLowerCase();
+            const pesertaItems = document.querySelectorAll('#pesertaSource .peserta-item');
+            const clearBtn = document.querySelector('.clear-search');
+            let visibleCount = 0;
+
+            pesertaItems.forEach(item => {
+                const nama = item.getAttribute('data-nama').toLowerCase();
+                const sekolah = item.getAttribute('data-sekolah').toLowerCase();
+
+                if (nama.includes(searchTerm) || sekolah.includes(searchTerm)) {
+                    item.style.display = 'flex';
+                    visibleCount++;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            // Update counter
+            document.getElementById('pesertaCount').textContent = visibleCount;
+
+            // Show/hide clear button
+            if (clearBtn) {
+                clearBtn.style.display = searchTerm ? 'block' : 'none';
+            }
+
+            // Tampilkan pesan jika tidak ada hasil
+            const emptyState = document.querySelector('#pesertaSource .empty-state');
+            if (emptyState) {
+                if (visibleCount === 0 && searchTerm) {
+                    emptyState.innerHTML = '<i class="fas fa-search fa-2x mb-2"></i><p>Tidak ditemukan peserta dengan kata kunci "' + searchTerm + '"</p>';
+                    emptyState.style.display = 'block';
+                } else if (visibleCount === 0) {
+                    emptyState.innerHTML = '<i class="fas fa-inbox fa-2x mb-2"></i><p>Tidak ada peserta</p>';
+                    emptyState.style.display = 'block';
+                } else {
+                    emptyState.style.display = 'none';
+                }
+            }
+        }
+
+        // Fungsi untuk clear search
+        function clearSearch() {
+            document.getElementById('searchPeserta').value = '';
+            filterPeserta();
+        }
+
+        // Auto-focus pada input search saat page load
         document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('searchPeserta');
+            if (searchInput) {
+                // Tambahkan event listener untuk ESC key
+                searchInput.addEventListener('keyup', function(e) {
+                    if (e.key === 'Escape') {
+                        clearSearch();
+                        this.blur();
+                    }
+                });
+            }
+
+            // Auto-hide alerts
             const alerts = document.querySelectorAll('.alert');
             alerts.forEach(alert => {
                 setTimeout(() => {
@@ -569,25 +674,25 @@ mysqli_stmt_close($stmt);
 
             // Send AJAX request
             fetch('buat_folder.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: 'action=add_peserta_to_folder&folder_id=' + folderId + '&peserta_id=' + pesertaId
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Reload page
-                    location.reload();
-                } else {
-                    alert(data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Terjadi kesalahan');
-            });
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: 'action=add_peserta_to_folder&folder_id=' + folderId + '&peserta_id=' + pesertaId
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Reload page
+                        location.reload();
+                    } else {
+                        alert(data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Terjadi kesalahan');
+                });
         }
 
         // Remove Peserta from Folder
@@ -595,25 +700,25 @@ mysqli_stmt_close($stmt);
             if (!confirm('Hapus peserta dari folder ini?')) return;
 
             fetch('buat_folder.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: 'action=remove_peserta_from_folder&mapping_id=' + mappingId
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Reload page
-                    location.reload();
-                } else {
-                    alert(data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Terjadi kesalahan');
-            });
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: 'action=remove_peserta_from_folder&mapping_id=' + mappingId
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Reload page
+                        location.reload();
+                    } else {
+                        alert(data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Terjadi kesalahan');
+                });
         }
 
         // Edit folder function

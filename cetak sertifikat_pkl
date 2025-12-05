@@ -1,0 +1,68 @@
+<?php
+session_start();
+include "koneksi.php";
+require "fpdf186/fpdf.php"; // sesuaikan lokasi folder fpdf
+
+if (!isset($_GET['id'])) {
+    die("ID peserta tidak ditemukan");
+}
+
+$id = intval($_GET['id']);
+
+// Ambil peserta
+$peserta = mysqli_query($koneksi, "
+    SELECT nama, sekolah, keterangan, sertifikat_number 
+    FROM peserta_pkl 
+    WHERE id = $id LIMIT 1
+");
+$data = mysqli_fetch_assoc($peserta);
+
+if (!$data) {
+    die("Data peserta tidak ditemukan");
+}
+
+// Ambil template aktif
+$template = mysqli_query($koneksi, "
+    SELECT file_depan, file_belakang 
+    FROM template_pkl 
+    WHERE aktif = 1 
+    LIMIT 1
+");
+$temp = mysqli_fetch_assoc($template);
+
+if (!$temp) {
+    die("Template sertifikat belum tersedia");
+}
+
+$fileDepan = "uploads/template_pkl/" . $temp['file_depan'];
+$fileBelakang = "uploads/template_pkl/" . $temp['file_belakang'];
+
+$pdf = new FPDF("L", "mm", "A4");
+$pdf->SetAutoPageBreak(false);
+
+// Halaman Depan
+$pdf->AddPage();
+$pdf->Image($fileDepan, 0, 0, 297, 210);
+
+// Teks utama
+$pdf->SetFont("Arial", "B", 28);
+$pdf->SetXY(0, 90);
+$pdf->Cell(297, 15, strtoupper($data['nama']), 0, 1, "C");
+
+$pdf->SetFont("Arial", "", 18);
+$pdf->SetXY(0, 110);
+$pdf->Cell(297, 10, $data['sekolah'], 0, 1, "C");
+
+$pdf->SetFont("Arial", "", 14);
+$pdf->SetXY(0, 130);
+$pdf->Cell(297, 10, $data['keterangan'], 0, 1, "C");
+
+$pdf->SetFont("Arial", "", 10);
+$pdf->SetXY(210, 200);
+$pdf->Cell(80, 5, "No Sertifikat: " . $data['sertifikat_number'], 0, 1, "R");
+
+// Halaman Belakang
+$pdf->AddPage();
+$pdf->Image($fileBelakang, 0, 0, 297, 210);
+
+$pdf->Output("I", "sertifikat_" . $data['nama'] . ".pdf");
