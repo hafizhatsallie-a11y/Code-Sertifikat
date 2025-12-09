@@ -51,6 +51,6 @@ if (isset($_POST['upload'])) {
         exit;
     }
 } else {
-    echo "Akses ditolak";
+    echo "Akses Tidak Diperbolehkan";
     exit;
 }
