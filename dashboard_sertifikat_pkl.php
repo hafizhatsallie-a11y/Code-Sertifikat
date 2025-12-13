@@ -1,163 +1,203 @@
 <?php
+
 session_start();
 include 'koneksi.php';
 
+// Cek login admin
 if (!isset($_SESSION['admin_logged_in'])) {
     header('Location: login_admin.php');
     exit;
 }
 
+// Handle logout
 if (isset($_GET['logout'])) {
     session_destroy();
     header('Location: login_admin.php');
     exit;
 }
 
-// Pesan sukses/error
-$success_msg = $_GET['success'] ?? '';
-$error_msg = $_GET['error'] ?? '';
-
-// QUERY YANG DIUPDATE: Gunakan IFNULL untuk menangani kolom yang belum ada
-$stmt = mysqli_prepare($koneksi, "
-    SELECT 
-        p.id, 
-        p.nama, 
-        p.sekolah, 
-        p.keterangan,
-        IFNULL(p.sertifikat_generated, 0) as sertifikat_generated,
-        p.sertifikat_number,
-        p.generated_at,
-        s.file_path,
-        IFNULL(s.download_count, 0) as download_count,
-        s.tanggal_generate
-    FROM peserta_pkl p
-    LEFT JOIN sertifikat_pkl s ON p.id = s.peserta_id
-    ORDER BY p.id DESC
-");
-mysqli_stmt_execute($stmt);
-$result = mysqli_stmt_get_result($stmt);
-$peserta = mysqli_fetch_all($result, MYSQLI_ASSOC);
-mysqli_stmt_close($stmt);
-
-$total = count($peserta);
-
-// Hitung statistik dengan COALESCE untuk menangani NULL
-$stmt = mysqli_prepare($koneksi, "
-    SELECT 
-        COUNT(*) as total_peserta,
-        COALESCE(SUM(CASE WHEN IFNULL(p.sertifikat_generated, 0) = 1 THEN 1 ELSE 0 END), 0) as total_sertifikat,
-        COALESCE(SUM(CASE WHEN IFNULL(p.sertifikat_generated, 0) = 0 THEN 1 ELSE 0 END), 0) as belum_sertifikat
-    FROM peserta_pkl p
-");
-mysqli_stmt_execute($stmt);
-$result = mysqli_stmt_get_result($stmt);
-$stats = mysqli_fetch_assoc($result);
-mysqli_stmt_close($stmt);
-
-// Hitung total download
-$total_download = 0;
-if ($stats['total_sertifikat'] > 0) {
-    $stmt = mysqli_prepare($koneksi, "SELECT SUM(COALESCE(download_count, 0)) as total_download FROM sertifikat_pkl");
-    mysqli_stmt_execute($stmt);
-    $result = mysqli_stmt_get_result($stmt);
-    $download_stats = mysqli_fetch_assoc($result);
-    $total_download = $download_stats['total_download'] ?? 0;
-    mysqli_stmt_close($stmt);
+// Ambil pesan dari session
+$alert = '';
+$alert_type = '';
+if (isset($_SESSION['alert'])) {
+    $alert = $_SESSION['alert'];
+    $alert_type = $_SESSION['alert_type'];
+    unset($_SESSION['alert']);
+    unset($_SESSION['alert_type']);
 }
 
-// Query untuk mengambil folder (sama seperti sebelumnya)
-$stmt = mysqli_prepare($koneksi, "
-    SELECT 
-        f.id, 
-        f.nama_folder, 
-        f.deskripsi, 
-        COUNT(fpm.id) as jumlah_peserta
-    FROM folder_peserta f
-    LEFT JOIN folder_peserta_mapping fpm ON f.id = fpm.folder_id
-    GROUP BY f.id
-    ORDER BY f.dibuat_pada DESC
-");
-mysqli_stmt_execute($stmt);
-$result_folders = mysqli_stmt_get_result($stmt);
-$folders = mysqli_fetch_all($result_folders, MYSQLI_ASSOC);
-mysqli_stmt_close($stmt);
-
-// Query untuk detail peserta per folder
-$folder_details = [];
-if (count($folders) > 0) {
-    $folder_ids = array_column($folders, 'id');
-    $placeholders = implode(',', array_fill(0, count($folder_ids), '?'));
-
+try {
+    // QUERY PESERTA DENGAN PREPARED STATEMENT
     $stmt = mysqli_prepare($koneksi, "
         SELECT 
-            fpm.folder_id,
-            p.nama,
-            p.sekolah
-        FROM folder_peserta_mapping fpm
-        JOIN peserta_pkl p ON fpm.peserta_id = p.id
-        WHERE fpm.folder_id IN ($placeholders)
-        ORDER BY fpm.folder_id, p.nama
+            p.id, 
+            p.nama, 
+            p.sekolah, 
+            p.keterangan,
+            IFNULL(p.sertifikat_generated, 0) as sertifikat_generated,
+            p.sertifikat_number,
+            p.generated_at,
+            s.file_path,
+            IFNULL(s.download_count, 0) as download_count,
+            s.tanggal_generate
+        FROM peserta_pkl p
+        LEFT JOIN sertifikat_pkl s ON p.id = s.peserta_id
+        ORDER BY p.id DESC
     ");
 
-    $types = str_repeat('i', count($folder_ids));
-    mysqli_stmt_bind_param($stmt, $types, ...$folder_ids);
-    mysqli_stmt_execute($stmt);
-    $result_details = mysqli_stmt_get_result($stmt);
-
-    while ($row = mysqli_fetch_assoc($result_details)) {
-        $folder_details[$row['folder_id']][] = $row;
+    if (!$stmt) {
+        throw new Exception('Prepare statement gagal: ' . mysqli_error($koneksi));
     }
-    mysqli_stmt_close($stmt);
-}
 
-// Query untuk menghitung trash
-$trash_count = 0;
-$stmt = mysqli_prepare($koneksi, "SHOW TABLES LIKE 'trash_peserta_pkl'");
-mysqli_stmt_execute($stmt);
-$result = mysqli_stmt_get_result($stmt);
-if (mysqli_num_rows($result) > 0) {
-    $stmt = mysqli_prepare($koneksi, "SELECT COUNT(*) as total FROM trash_peserta_pkl");
     mysqli_stmt_execute($stmt);
     $result = mysqli_stmt_get_result($stmt);
-    $trash_data = mysqli_fetch_assoc($result);
-    $trash_count = $trash_data['total'] ?? 0;
-}
-mysqli_stmt_close($stmt);
+    $peserta = mysqli_fetch_all($result, MYSQLI_ASSOC);
+    mysqli_stmt_close($stmt);
 
-// Cek apakah tabel sertifikat_pkl sudah ada, jika belum buat otomatis
-$stmt = mysqli_prepare($koneksi, "SHOW TABLES LIKE 'sertifikat_pkl'");
-mysqli_stmt_execute($stmt);
-$result = mysqli_stmt_get_result($stmt);
-if (mysqli_num_rows($result) == 0) {
-    // Buat tabel sertifikat_pkl otomatis
-    $create_table = "
-        CREATE TABLE sertifikat_pkl (
-            id INT PRIMARY KEY AUTO_INCREMENT,
-            peserta_id INT NOT NULL,
-            nomor_sertifikat VARCHAR(50),
-            file_path VARCHAR(255),
-            tanggal_generate DATE,
-            download_count INT DEFAULT 0,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (peserta_id) REFERENCES peserta_pkl(id)
-        )
-    ";
-    mysqli_query($koneksi, $create_table);
-}
+    $total = count($peserta);
 
-// Cek apakah kolom sertifikat_generated sudah ada di peserta_pkl
-$stmt = mysqli_prepare($koneksi, "SHOW COLUMNS FROM peserta_pkl LIKE 'sertifikat_generated'");
-mysqli_stmt_execute($stmt);
-$result = mysqli_stmt_get_result($stmt);
-if (mysqli_num_rows($result) == 0) {
-    // Tambahkan kolom otomatis
-    $add_columns = "
-        ALTER TABLE peserta_pkl 
-        ADD COLUMN sertifikat_generated BOOLEAN DEFAULT FALSE,
-        ADD COLUMN sertifikat_number VARCHAR(50),
-        ADD COLUMN generated_at DATETIME
-    ";
-    mysqli_query($koneksi, $add_columns);
+    // QUERY STATISTIK
+    $stmt = mysqli_prepare($koneksi, "
+        SELECT 
+            COUNT(*) as total_peserta,
+            COALESCE(SUM(CASE WHEN IFNULL(p.sertifikat_generated, 0) = 1 THEN 1 ELSE 0 END), 0) as total_sertifikat,
+            COALESCE(SUM(CASE WHEN IFNULL(p.sertifikat_generated, 0) = 0 THEN 1 ELSE 0 END), 0) as belum_sertifikat
+        FROM peserta_pkl p
+    ");
+
+    if (!$stmt) {
+        throw new Exception('Prepare statement statistik gagal: ' . mysqli_error($koneksi));
+    }
+
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+    $stats = mysqli_fetch_assoc($result);
+    mysqli_stmt_close($stmt);
+
+    // QUERY TOTAL DOWNLOAD
+    $total_download = 0;
+    if ($stats['total_sertifikat'] > 0) {
+        $stmt = mysqli_prepare($koneksi, "
+            SELECT SUM(COALESCE(download_count, 0)) as total_download 
+            FROM sertifikat_pkl
+        ");
+
+        if ($stmt) {
+            mysqli_stmt_execute($stmt);
+            $result = mysqli_stmt_get_result($stmt);
+            $download_stats = mysqli_fetch_assoc($result);
+            $total_download = $download_stats['total_download'] ?? 0;
+            mysqli_stmt_close($stmt);
+        }
+    }
+
+    // QUERY FOLDER
+    $stmt = mysqli_prepare($koneksi, "
+        SELECT 
+            f.id, 
+            f.nama_folder, 
+            f.deskripsi, 
+            COUNT(fpm.id) as jumlah_peserta
+        FROM folder_peserta f
+        LEFT JOIN folder_peserta_mapping fpm ON f.id = fpm.folder_id
+        GROUP BY f.id
+        ORDER BY f.dibuat_pada DESC
+    ");
+
+    if (!$stmt) {
+        throw new Exception('Prepare statement folder gagal: ' . mysqli_error($koneksi));
+    }
+
+    mysqli_stmt_execute($stmt);
+    $result_folders = mysqli_stmt_get_result($stmt);
+    $folders = mysqli_fetch_all($result_folders, MYSQLI_ASSOC);
+    mysqli_stmt_close($stmt);
+
+    // QUERY DETAIL PESERTA PER FOLDER (FIXED SQL INJECTION)
+    $folder_details = [];
+    if (count($folders) > 0) {
+        $folder_ids = array_column($folders, 'id');
+        $placeholders = implode(',', array_fill(0, count($folder_ids), '?'));
+
+        $stmt = mysqli_prepare($koneksi, "
+            SELECT 
+                fpm.folder_id,
+                p.id as peserta_id,
+                p.nama,
+                p.sekolah
+            FROM folder_peserta_mapping fpm
+            JOIN peserta_pkl p ON fpm.peserta_id = p.id
+            WHERE fpm.folder_id IN ($placeholders)
+            ORDER BY fpm.folder_id, p.nama
+        ");
+
+        if ($stmt) {
+            $types = str_repeat('i', count($folder_ids));
+            mysqli_stmt_bind_param($stmt, $types, ...$folder_ids);
+            mysqli_stmt_execute($stmt);
+            $result_details = mysqli_stmt_get_result($stmt);
+
+            while ($row = mysqli_fetch_assoc($result_details)) {
+                $folder_details[$row['folder_id']][] = $row;
+            }
+            mysqli_stmt_close($stmt);
+        }
+    }
+
+    // QUERY TRASH COUNT
+    $trash_count = 0;
+    $stmt = mysqli_prepare($koneksi, "SHOW TABLES LIKE 'trash_peserta_pkl'");
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+
+    if (mysqli_num_rows($result) > 0) {
+        $stmt = mysqli_prepare($koneksi, "SELECT COUNT(*) as total FROM trash_peserta_pkl");
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
+        $trash_data = mysqli_fetch_assoc($result);
+        $trash_count = $trash_data['total'] ?? 0;
+        mysqli_stmt_close($stmt);
+    }
+
+    // AUTO CREATE TABLE SERTIFIKAT
+    $stmt = mysqli_prepare($koneksi, "SHOW TABLES LIKE 'sertifikat_pkl'");
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+
+    if (mysqli_num_rows($result) == 0) {
+        $create_table = "
+            CREATE TABLE IF NOT EXISTS sertifikat_pkl (
+                id INT PRIMARY KEY AUTO_INCREMENT,
+                peserta_id INT NOT NULL,
+                nomor_sertifikat VARCHAR(50),
+                file_path VARCHAR(255),
+                tanggal_generate DATE,
+                download_count INT DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (peserta_id) REFERENCES peserta_pkl(id) ON DELETE CASCADE
+            )
+        ";
+        mysqli_query($koneksi, $create_table);
+    }
+
+    // AUTO ADD COLUMNS
+    $stmt = mysqli_prepare($koneksi, "SHOW COLUMNS FROM peserta_pkl LIKE 'sertifikat_generated'");
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+
+    if (mysqli_num_rows($result) == 0) {
+        $add_columns = "
+            ALTER TABLE peserta_pkl 
+            ADD COLUMN sertifikat_generated BOOLEAN DEFAULT FALSE,
+            ADD COLUMN sertifikat_number VARCHAR(50),
+            ADD COLUMN generated_at DATETIME
+        ";
+        mysqli_query($koneksi, $add_columns);
+    }
+    mysqli_stmt_close($stmt);
+} catch (Exception $e) {
+    $alert = 'Error: ' . $e->getMessage();
+    $alert_type = 'danger';
 }
 ?>
 
@@ -172,10 +212,18 @@ if (mysqli_num_rows($result) == 0) {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="css/dashboard_sertifikat_pkl.css?v=<?php echo time(); ?>">
+    <style>
+        mark.highlight {
+            background-color: #fff3cd;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+    </style>
 </head>
 
 <body>
 
+    <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-custom">
         <div class="container-fluid">
             <a class="navbar-brand d-flex align-items-center" href="dashboard_sertifikat_pkl.php">
@@ -198,7 +246,7 @@ if (mysqli_num_rows($result) == 0) {
                         <a class="btn btn-sm btn-warning" href="trash_peserta.php">
                             <i class="fas fa-trash-alt me-1"></i> Trash
                             <?php if ($trash_count > 0): ?>
-                                <span class="badge bg-danger"><?php echo $trash_count; ?></span>
+                                <span class="badge bg-danger"><?php echo htmlspecialchars($trash_count); ?></span>
                             <?php endif; ?>
                         </a>
                     </li>
@@ -214,20 +262,12 @@ if (mysqli_num_rows($result) == 0) {
 
     <div class="container-fluid mt-4">
 
-        <!-- Notifikasi -->
-        <?php if ($success_msg): ?>
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                <i class="fas fa-check-circle me-2"></i>
-                <?php echo htmlspecialchars($success_msg); ?>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        <?php endif; ?>
-
-        <?php if ($error_msg): ?>
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <i class="fas fa-exclamation-circle me-2"></i>
-                <?php echo htmlspecialchars($error_msg); ?>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <!-- Alert -->
+        <?php if ($alert != ''): ?>
+            <div class="alert alert-<?php echo htmlspecialchars($alert_type); ?> alert-dismissible fade show" role="alert">
+                <i class="fas fa-info-circle me-2"></i>
+                <?php echo htmlspecialchars($alert); ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         <?php endif; ?>
 
@@ -253,7 +293,7 @@ if (mysqli_num_rows($result) == 0) {
                             <i class="fas fa-users"></i>
                         </div>
                         <div class="stat-content">
-                            <h4 class="stat-number"><?php echo $stats['total_peserta']; ?></h4>
+                            <h4 class="stat-number"><?php echo htmlspecialchars($stats['total_peserta']); ?></h4>
                             <p class="stat-label">Total Peserta</p>
                         </div>
                     </div>
@@ -267,7 +307,7 @@ if (mysqli_num_rows($result) == 0) {
                             <i class="fas fa-certificate"></i>
                         </div>
                         <div class="stat-content">
-                            <h4 class="stat-number"><?php echo $stats['total_sertifikat']; ?></h4>
+                            <h4 class="stat-number"><?php echo htmlspecialchars($stats['total_sertifikat']); ?></h4>
                             <p class="stat-label">Sertifikat Aktif</p>
                         </div>
                     </div>
@@ -281,7 +321,7 @@ if (mysqli_num_rows($result) == 0) {
                             <i class="fas fa-download"></i>
                         </div>
                         <div class="stat-content">
-                            <h4 class="stat-number"><?php echo $total_download; ?></h4>
+                            <h4 class="stat-number"><?php echo htmlspecialchars($total_download); ?></h4>
                             <p class="stat-label">Total Download</p>
                         </div>
                     </div>
@@ -336,7 +376,7 @@ if (mysqli_num_rows($result) == 0) {
                                                 <?php endif; ?>
                                             </div>
                                             <span class="badge bg-primary folder-badge">
-                                                <?php echo $folder['jumlah_peserta']; ?> peserta
+                                                <?php echo htmlspecialchars($folder['jumlah_peserta']); ?> peserta
                                             </span>
                                         </div>
 
@@ -368,12 +408,13 @@ if (mysqli_num_rows($result) == 0) {
                                             <?php endif; ?>
                                         </div>
 
-                                        <div class="d-flex justify-content-between mt-3">
-                                            <a href="buat_folder.php#folder<?php echo $folder['id']; ?>" class="btn btn-sm btn-outline-primary view-folder-btn">
+                                        <div class="d-flex gap-2 mt-3 flex-wrap">
+                                            <a href="buat_folder.php#folder<?php echo htmlspecialchars($folder['id']); ?>"
+                                                class="btn btn-sm btn-outline-primary flex-grow-1">
                                                 <i class="fas fa-eye me-1"></i> Lihat Detail
                                             </a>
-                                            <a href="buat_folder.php?delete_id=<?php echo $folder['id']; ?>"
-                                                class="btn btn-sm btn-outline-danger view-folder-btn"
+                                            <a href="buat_folder.php?delete_id=<?php echo htmlspecialchars($folder['id']); ?>"
+                                                class="btn btn-sm btn-outline-danger flex-grow-1"
                                                 onclick="return confirm('Hapus folder ini?')">
                                                 <i class="fas fa-trash me-1"></i> Hapus
                                             </a>
@@ -389,19 +430,19 @@ if (mysqli_num_rows($result) == 0) {
 
         <!-- Peserta Table -->
         <div class="card card-table">
-            <div class="card-header d-flex justify-content-between align-items-center">
+            <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <div>
                     <i class="fas fa-list me-2"></i> Data Peserta PKL
                     <span class="badge bg-secondary ms-2">
                         <i class="fas fa-certificate"></i>
-                        <?php echo $stats['total_sertifikat']; ?> sertifikat aktif
+                        <?php echo htmlspecialchars($stats['total_sertifikat']); ?> sertifikat aktif
                     </span>
                 </div>
-                <div>
-                    <button class="btn btn-sm btn-outline-secondary me-2" onclick="refreshTable()">
+                <div class="d-flex gap-2">
+                    <button class="btn btn-sm btn-outline-secondary" onclick="refreshTable()">
                         <i class="fas fa-sync-alt"></i> Refresh
                     </button>
-                    <span class="badge bg-primary peserta-count"><?php echo $total; ?> peserta</span>
+                    <span class="badge bg-primary peserta-count"><?php echo htmlspecialchars($total); ?> peserta</span>
                 </div>
             </div>
 
@@ -419,7 +460,7 @@ if (mysqli_num_rows($result) == 0) {
                 </div>
                 <small class="text-muted mt-1 d-block">
                     <i class="fas fa-info-circle me-1"></i>
-                    Tekan ESC untuk menghapus pencarian
+                    Klik ESC untuk menghapus pencarian
                 </small>
             </div>
 
@@ -443,24 +484,28 @@ if (mysqli_num_rows($result) == 0) {
                                     $has_cert = $p['sertifikat_generated'] == 1;
                                     $cert_date = !empty($p['generated_at']) ? date('d/m/Y', strtotime($p['generated_at'])) : '';
                                     $download_count = $p['download_count'] ?? 0;
+                                    $peserta_id = htmlspecialchars($p['id']);
+                                    $nama = htmlspecialchars($p['nama']);
+                                    $sekolah = htmlspecialchars($p['sekolah']);
+                                    $cert_number = htmlspecialchars($p['sertifikat_number'] ?? '');
                             ?>
-                                    <tr id="peserta-<?php echo $p['id']; ?>">
+                                    <tr id="peserta-<?php echo $peserta_id; ?>">
                                         <td class="fw-bold text-primary"><?php echo $no++; ?></td>
                                         <td>
                                             <div class="d-flex align-items-center">
                                                 <div>
-                                                    <strong class="peserta-nama"><?php echo htmlspecialchars($p['nama']); ?></strong>
-                                                    <?php if ($has_cert && !empty($p['sertifikat_number'])): ?>
+                                                    <strong class="peserta-nama"><?php echo $nama; ?></strong>
+                                                    <?php if ($has_cert && !empty($cert_number)): ?>
                                                         <br>
                                                         <small class="text-muted cert-number">
                                                             <i class="fas fa-hashtag me-1"></i>
-                                                            <?php echo $p['sertifikat_number']; ?>
+                                                            <?php echo $cert_number; ?>
                                                         </small>
                                                     <?php endif; ?>
                                                 </div>
                                             </div>
                                         </td>
-                                        <td class="peserta-sekolah"><?php echo htmlspecialchars($p['sekolah']); ?></td>
+                                        <td class="peserta-sekolah"><?php echo $sekolah; ?></td>
                                         <td>
                                             <?php if (!empty($p['keterangan'])): ?>
                                                 <small><?php echo htmlspecialchars($p['keterangan']); ?></small>
@@ -472,50 +517,40 @@ if (mysqli_num_rows($result) == 0) {
                                             <?php if ($has_cert): ?>
                                                 <div class="d-flex align-items-center">
                                                     <span class="badge bg-info me-2">
-                                                        <i class="fas fa-download"></i> <?php echo $download_count; ?>
+                                                        <i class="fas fa-download"></i> <?php echo htmlspecialchars($download_count); ?>
                                                     </span>
-                                                    <?php if ($download_count > 0): ?>
-                                                        <small class="text-muted">x</small>
-                                                    <?php endif; ?>
                                                 </div>
                                             <?php else: ?>
                                                 <span class="text-muted">-</span>
                                             <?php endif; ?>
                                         </td>
                                         <td>
-                                            <div class="btn-group btn-group-sm flex-wrap">
-                                                <!-- TOMBOL AKSES SERTIFIKAT -->
+                                            <div class="btn-group btn-group-sm flex-wrap gap-1">
                                                 <?php if ($has_cert): ?>
-                                                    <!-- View Sertifikat -->
-                                                    <a href="view_sertifikat.php?id=<?php echo $p['id']; ?>"
-                                                        class="btn btn-success btn-certificate"
+                                                    <a href="view_sertifikat.php?id=<?php echo $peserta_id; ?>"
+                                                        class="btn btn-success btn-sm"
                                                         target="_blank"
                                                         title="Lihat Sertifikat">
                                                         <i class="fas fa-eye"></i>
                                                     </a>
-                                                    <!-- Download Sertifikat -->
-                                                    <a href="download_sertifikat.php?id=<?php echo $p['id']; ?>"
-                                                        class="btn btn-primary btn-certificate"
+                                                    <a href="download_sertifikat.php?id=<?php echo $peserta_id; ?>"
+                                                        class="btn btn-primary btn-sm"
                                                         title="Download Sertifikat">
                                                         <i class="fas fa-download"></i>
                                                     </a>
-                                                    <!-- Regenerate Sertifikat -->
-                                                 
                                                 <?php else: ?>
-                                                    <!-- Jika belum ada sertifikat, tampilkan tombol info saja -->
-                                                    <span class="text-muted" title="Belum ada sertifikat">
+                                                    <span class="text-muted small">
                                                         <i class="fas fa-info-circle me-1"></i> Belum ada sertifikat
                                                     </span>
                                                 <?php endif; ?>
 
-                                                <!-- TOMBOL LAINNYA -->
-                                                <a href="edit_peserta.php?id=<?php echo $p['id']; ?>"
-                                                    class="btn btn-outline-warning"
+                                                <a href="edit_peserta.php?id=<?php echo $peserta_id; ?>"
+                                                    class="btn btn-warning btn-sm"
                                                     title="Edit Data">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
-                                                <a href="hapus_peserta.php?id=<?php echo $p['id']; ?>"
-                                                    class="btn btn-outline-danger"
+                                                <a href="hapus_peserta.php?id=<?php echo $peserta_id; ?>"
+                                                    class="btn btn-danger btn-sm"
                                                     onclick="return confirm('Pindahkan ke trash?')"
                                                     title="Hapus Data">
                                                     <i class="fas fa-trash"></i>
@@ -550,112 +585,150 @@ if (mysqli_num_rows($result) == 0) {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/js/all.min.js"></script>
 
     <script>
-        $(document).ready(function() {
-            // Focus search input on page load
-            const searchInput = $('#searchInput');
-            if (searchInput.length) {
+        // Auto-hide alerts
+        document.addEventListener('DOMContentLoaded', function() {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                setTimeout(() => {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                }, 5000);
+            });
+
+            // Focus search input
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
                 searchInput.focus();
             }
-
-            // Auto-hide alerts after 5 seconds
-            setTimeout(function() {
-                $('.alert').alert('close');
-            }, 5000);
         });
 
-        // Search functionality
-        document.addEventListener('DOMContentLoaded', function() {
+        // Search functionality (SAFE)
+        function performSearch() {
             const searchInput = document.getElementById('searchInput');
             const rows = document.querySelectorAll("#tabelPeserta tbody tr");
             const counterBadge = document.querySelector('.peserta-count');
 
-            function performSearch() {
-                let filter = searchInput.value.toLowerCase().trim();
-                let visibleCount = 0;
+            let filter = searchInput.value.toLowerCase().trim();
+            let visibleCount = 0;
 
-                rows.forEach(row => {
-                    // Skip empty row
-                    if (row.querySelector('.text-center')) {
-                        return;
-                    }
-
-                    let nama = row.querySelector('.peserta-nama').textContent.toLowerCase();
-                    let sekolah = row.querySelector('.peserta-sekolah').textContent.toLowerCase();
-                    let keterangan = row.cells[3].textContent.toLowerCase();
-                    let certNumberElement = row.querySelector('.cert-number');
-                    let certNumber = certNumberElement ? certNumberElement.textContent.toLowerCase() : '';
-
-                    let match = false;
-
-                    if (filter) {
-                        // Pencarian normal
-                        match = nama.includes(filter) ||
-                               sekolah.includes(filter) ||
-                               keterangan.includes(filter) ||
-                               certNumber.includes(filter);
-                    } else {
-                        // Jika tidak ada filter, tampilkan semua
-                        match = true;
-                    }
-
-                    if (match) {
-                        row.style.display = "";
-                        visibleCount++;
-
-                        // Highlight search term
-                        if (filter) {
-                            highlightText(row, filter);
-                        } else {
-                            removeHighlight(row);
-                        }
-                    } else {
-                        row.style.display = "none";
-                        removeHighlight(row);
-                    }
-                });
-
-                // Update counter
-                if (counterBadge) {
-                    let counterText = visibleCount + ' peserta';
-                    if (filter) {
-                        counterText += ' ditemukan';
-                    }
-                    counterBadge.textContent = counterText;
+            rows.forEach(row => {
+                // Skip empty row
+                if (row.querySelector('.text-center')) {
+                    return;
                 }
-            }
 
-            function highlightText(row, term) {
-                // Hilangkan highlight sebelumnya
-                removeHighlight(row);
-
-                // Highlight pada nama
                 let namaElement = row.querySelector('.peserta-nama');
-                if (namaElement) {
-                    let originalText = namaElement.textContent;
-                    let regex = new RegExp(`(${term})`, 'gi');
-                    let highlighted = originalText.replace(regex, '<mark class="highlight">$1</mark>');
-                    namaElement.innerHTML = highlighted;
-                }
-
-                // Highlight pada sekolah
                 let sekolahElement = row.querySelector('.peserta-sekolah');
-                if (sekolahElement) {
-                    let originalText = sekolahElement.textContent;
-                    let regex = new RegExp(`(${term})`, 'gi');
-                    let highlighted = originalText.replace(regex, '<mark class="highlight">$1</mark>');
-                    sekolahElement.innerHTML = highlighted;
+                let certNumberElement = row.querySelector('.cert-number');
+                let keteranganCell = row.cells[3];
+
+                if (!namaElement || !sekolahElement) return;
+
+                let nama = namaElement.textContent.toLowerCase();
+                let sekolah = sekolahElement.textContent.toLowerCase();
+                let keterangan = keteranganCell ? keteranganCell.textContent.toLowerCase() : '';
+                let certNumber = certNumberElement ? certNumberElement.textContent.toLowerCase() : '';
+
+                let match = false;
+
+                if (filter) {
+                    match = nama.includes(filter) ||
+                        sekolah.includes(filter) ||
+                        keterangan.includes(filter) ||
+                        certNumber.includes(filter);
+                } else {
+                    match = true;
                 }
+
+                if (match) {
+                    row.style.display = "";
+                    visibleCount++;
+
+                    // Highlight text (SAFE)
+                    if (filter) {
+                        highlightText(namaElement, filter);
+                        highlightText(sekolahElement, filter);
+                    } else {
+                        removeHighlight(namaElement);
+                        removeHighlight(sekolahElement);
+                    }
+                } else {
+                    row.style.display = "none";
+                    removeHighlight(namaElement);
+                    removeHighlight(sekolahElement);
+                }
+            });
+
+            // Update counter
+            if (counterBadge) {
+                let counterText = visibleCount + ' peserta';
+                if (filter) {
+                    counterText += ' ditemukan';
+                }
+                counterBadge.textContent = counterText;
+            }
+        }
+
+        function highlightText(element, term) {
+            if (!element) return;
+
+            let originalText = element.textContent;
+            let regex = new RegExp('(' + term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
+
+            let fragment = document.createDocumentFragment();
+            let lastIndex = 0;
+
+            originalText.replace(regex, function(match, p1, offset) {
+                // Add text node
+                if (offset > lastIndex) {
+                    fragment.appendChild(
+                        document.createTextNode(originalText.substring(lastIndex, offset))
+                    );
+                }
+
+                // Add mark element
+                let mark = document.createElement('mark');
+                mark.className = 'highlight';
+                mark.textContent = match;
+                fragment.appendChild(mark);
+
+                lastIndex = offset + match.length;
+            });
+
+            // Add remaining text
+            if (lastIndex < originalText.length) {
+                fragment.appendChild(
+                    document.createTextNode(originalText.substring(lastIndex))
+                );
             }
 
-            function removeHighlight(row) {
-                let marks = row.querySelectorAll('mark.highlight');
-                marks.forEach(mark => {
-                    let parent = mark.parentNode;
-                    parent.textContent = parent.textContent;
-                });
-            }
+            element.textContent = '';
+            element.appendChild(fragment);
+        }
 
-            // Event listeners
+        function removeHighlight(element) {
+            if (!element) return;
+            let text = element.textContent;
+            element.textContent = text;
+        }
+
+        function clearSearch() {
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.value = '';
+                performSearch();
+                searchInput.focus();
+            }
+        }
+
+        function refreshTable() {
+            location.reload();
+        }
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('searchInput');
+
             if (searchInput) {
                 searchInput.addEventListener('input', performSearch);
                 searchInput.addEventListener('keyup', function(e) {
@@ -663,24 +736,7 @@ if (mysqli_num_rows($result) == 0) {
                         clearSearch();
                     }
                 });
-
-                // Perform initial search if there's a value
-                if (searchInput.value) {
-                    performSearch();
-                }
             }
-
-            window.clearSearch = function() {
-                if (searchInput) {
-                    searchInput.value = '';
-                    performSearch();
-                    searchInput.focus();
-                }
-            };
-
-            window.refreshTable = function() {
-                location.reload();
-            };
         });
     </script>
 
