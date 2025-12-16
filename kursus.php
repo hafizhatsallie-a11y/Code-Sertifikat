@@ -14,7 +14,7 @@
 <!-- Navbar Atas -->
  <header class="fixed-top">
     <nav class="navbar navbar-light bg-trasparent justify-content-between px-4 py-2">
-      <a class="navbar-logo fw-bold" href="#">SAE Digital Akademi</a>
+      <a class="navbar-logo fw-bold" href="#">SAE Digital Akademi</a> 
       <div>
 </header>
 

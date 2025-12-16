@@ -1,33 +1,64 @@
+<?php
+// upload_template.php
+session_start();
+
+// Folder upload
+$upload_dir = "uploads/";
+if (!file_exists($upload_dir)) {
+    mkdir($upload_dir, 0777, true);
+}
+
+// Handle upload
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['template_file'])) {
+    $file = $_FILES['template_file'];
+    
+    if ($file['error'] == 0) {
+        // Pindahkan file
+        $filename = 'template.jpg'; // Nama tetap
+        $destination = $upload_dir . $filename;
+        
+        if (move_uploaded_file($file['tmp_name'], $destination)) {
+            $success = "✅ Template berhasil diupload!";
+        } else {
+            $error = "❌ Gagal menyimpan file.";
+        }
+    }
+}
+?>
 <!DOCTYPE html>
-<html lang="id">
-
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Upload Template Sertifikat</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="css/upload_template_pkl.css?v=<?php echo time(); ?>">
+    <title>Upload Template</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        .nav a { background: #007bff; color: white; padding: 10px; text-decoration: none; margin: 5px; }
+        form { margin: 20px 0; padding: 20px; border: 1px solid #ccc; }
+    </style>
 </head>
-
-<body class="bg-light">
-
-    <div class="container mt-5" style="max-width: 650px;">
-        <div class="card shadow-sm border-0 p-4">
-            <h4 class="fw-bold mb-3">Upload Template Sertifikat</h4>
-
-            <form action="proses_upload_template_pkl.php" method="post" enctype="multipart/form-data">
-
-                <label class="form-label">File Depan (jpg atau png)</label>
-                <input type="file" name="file_depan" accept=".png,.jpg,.jpeg" class="form-control mb-3" required>
-
-                <label class="form-label">File Belakang (jpg atau png)</label>
-                <input type="file" name="file_belakang" accept=".png,.jpg,.jpeg" class="form-control mb-4" required>
-
-                <button type="submit" name="upload" class="btn btn-primary w-100">Upload Template</button>
-            </form>
-
-        </div>
+<body>
+    <h1>Upload Template</h1>
+    
+    <div class="nav">
+        <a href="input_peserta_pkl.php">Input Data</a>
     </div>
-
+    
+    <?php if (isset($success)): ?>
+        <div style="background: green; color: white; padding: 10px;"><?php echo $success; ?></div>
+    <?php endif; ?>
+    
+    <?php if (isset($error)): ?>
+        <div style="background: red; color: white; padding: 10px;"><?php echo $error; ?></div>
+    <?php endif; ?>
+    
+    <form method="POST" enctype="multipart/form-data">
+        <p>Pilih template (JPG/PNG):</p>
+        <input type="file" name="template_file" accept=".jpg,.jpeg,.png" required><br><br>
+        <button type="submit">Upload</button>
+    </form>
+    
+    <?php if (file_exists('uploads/template.jpg')): ?>
+        <h3>Template Saat Ini:</h3>
+        <img src="uploads/template.jpg" style="max-width: 300px; border: 1px solid #ccc;">
+    <?php endif; ?>
 </body>
-
 </html>
