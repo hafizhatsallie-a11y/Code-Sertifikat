@@ -7,7 +7,7 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #4b6cb7 0%, #182848 100%);
+    background: linear-gradient(135deg, #4b6cb7 0%, #7797d7 100%);
     min-height: 100vh;
     display: flex;
     align-items: center;
@@ -33,7 +33,7 @@ body {
 .header-section {
     text-align: center;
     margin-bottom: 25px;
-    border-bottom: 2px solid #4b6cb7;
+    border-bottom: 2px solid #ff6f00;
     padding-bottom: 15px;
 }
 
@@ -45,7 +45,7 @@ body {
 }
 
 .header-section h2 {
-    color: #4b6cb7;
+    color: #eb700cd4;
     font-size: 20px;
     font-weight: 600;
     margin-bottom: 6px;
@@ -65,7 +65,7 @@ body {
 .form-label {
     display: block;
     margin-bottom: 8px;
-    color: #2c3e50;
+    color: #00cf07;
     font-weight: 600;
     font-size: 16px;
 }
@@ -76,7 +76,7 @@ body {
 }
 
 .required {
-    color: #e74c3c;
+    color: #b98500bd;
     font-weight: bold;
 }
 
